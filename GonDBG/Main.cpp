@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "ArgumentParser.h"
-//#include "Debugger.h"
+#include "Debugger.h"
 
 static
 INT
@@ -22,7 +22,9 @@ SafeMain(
 
 		auto params = ArgumentParser::Parse(raw_parameters);
 
-		/*bool is_invasive = true;
+		DebuggerPtr debugger;
+
+		bool is_invasive = true;
 		switch (params.debugee_type)
 		{
 		case DebugTargetType::NonInvasiveAttach:
@@ -30,19 +32,19 @@ SafeMain(
 		case DebugTargetType::Attach:
 			if (params.debugee_identifier == DebugeeIdentifier::FilePath)
 			{
-				Debugger debugger = Debugger::attach(params.debugee_path, is_invasive);
+				debugger = Debugger::attach(params.debugee_path, is_invasive);
 			}
 			else
 			{
-				Debugger debugger = Debugger::attach(params.debugee_pid, is_invasive);
+				debugger = Debugger::attach(params.debugee_pid, is_invasive);
 			}
 			break;
 		case DebugTargetType::Create:
-			Debugger debugger = Debuger::create(params.debugee_path);
+			debugger = Debugger::create(params.debugee_path);
 			break;
 		}
 
-		debugger.debug();*/
+		debugger->debug();
 
 		return 0;
 	}
