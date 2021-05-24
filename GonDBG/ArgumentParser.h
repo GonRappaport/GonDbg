@@ -40,7 +40,7 @@ public:
 	{};
 
 	// Getters
-	const std::wstring& get_debugee_path()
+	const std::wstring& get_debugee_path() const
 	{
 		// TODO: This if is literally what value() does. Consider removing
 		if (!m_debugee_path.has_value())
@@ -50,7 +50,7 @@ public:
 		return m_debugee_path.value();
 	}
 
-	const DWORD get_debugee_pid()
+	const DWORD get_debugee_pid() const
 	{
 		if (!m_debugee_pid.has_value())
 		{
@@ -59,8 +59,8 @@ public:
 		return m_debugee_pid.value();
 	}
 
-	const DebugTargetType get_debugee_type() { return m_debugee_type; };
-	const DebugeeIdentifier get_debugee_identifier() { return m_debugee_identifier; }
+	const DebugTargetType get_debugee_type() const { return m_debugee_type; };
+	const DebugeeIdentifier get_debugee_identifier() const { return m_debugee_identifier; }
 
 	__declspec(property (get = get_debugee_type)) const DebugTargetType debugee_type;
 	__declspec(property (get = get_debugee_identifier)) const DebugeeIdentifier debugee_identifier;

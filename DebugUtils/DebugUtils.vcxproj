@@ -19,10 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AutoCloseHandle.hpp" />
+    <ClInclude Include="CreatedThread.h" />
+    <ClInclude Include="CtrlCHandler.h" />
     <ClInclude Include="Debugger.h" />
     <ClInclude Include="ProcUtils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CreatedThread.cpp" />
+    <ClCompile Include="CtrlCHandler.cpp" />
     <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="ProcUtils.cpp" />
   </ItemGroup>

@@ -29,18 +29,19 @@ SafeMain(
 		{
 		case DebugTargetType::NonInvasiveAttach:
 			is_invasive = false;
+			__fallthrough;
 		case DebugTargetType::Attach:
 			if (params.debugee_identifier == DebugeeIdentifier::FilePath)
 			{
-				debugger = Debugger::attach(params.debugee_path, is_invasive);
+				debugger = DebuggerUtils::attach(params.debugee_path, is_invasive);
 			}
 			else
 			{
-				debugger = Debugger::attach(params.debugee_pid, is_invasive);
+				debugger = DebuggerUtils::attach(params.debugee_pid, is_invasive);
 			}
 			break;
 		case DebugTargetType::Create:
-			debugger = Debugger::create(params.debugee_path);
+			debugger = DebuggerUtils::create(params.debugee_path);
 			break;
 		}
 
