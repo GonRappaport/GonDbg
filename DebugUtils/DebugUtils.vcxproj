@@ -23,12 +23,15 @@
     <ClInclude Include="CreatedThread.h" />
     <ClInclude Include="CtrlCHandler.h" />
     <ClInclude Include="Debugger.h" />
+    <ClInclude Include="IDebuggedProcess.h" />
+    <ClInclude Include="Process.h" />
     <ClInclude Include="ProcUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CreatedThread.cpp" />
     <ClCompile Include="CtrlCHandler.cpp" />
     <ClCompile Include="Debugger.cpp" />
+    <ClCompile Include="Process.cpp" />
     <ClCompile Include="ProcUtils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

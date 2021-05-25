@@ -2,21 +2,34 @@
 
 #include <exception>
 
-CtrlCHandler::m_registered_handler = false;
+bool CtrlCHandler::m_registered_handler = false;
+std::list<ICtrlHandler*> CtrlCHandler::m_registrations;
 
-BOOL WINAPI ctrl_handler(DWORD ctrl_type)
+BOOL WINAPI CtrlCHandler::ctrl_handler(DWORD ctrl_type)
 {
+	bool result = false;
 
+	for (auto handler : CtrlCHandler::m_registrations)
+	{
+		// If one of the handlers handled the event, stop processing other handlers that weren't registered by us
+		result |= handler->handle_control(ctrl_type);
+	}
+
+	return result;
 }
 
-CtrlCHandler::CtrlCHandler(PFN_CTRLHANDLER handler, void* context):
-	m_handler(handler),
-	m_context(context)
+CtrlCHandler::CtrlCHandler(ICtrlHandler* handler):
+	m_handler(handler)
 {
 	// TODO: Consider adding a wrapper for that for safe removal
-	if (!SetConsoleCtrlHandler(m_handler, true))
+	CtrlCHandler::m_registrations.push_back(handler);
+	if (!CtrlCHandler::m_registered_handler)
 	{
-		throw std::exception("SetConsoleCtrlHandler failed");
+		if (!SetConsoleCtrlHandler(ctrl_handler, true))
+		{
+			throw std::exception("SetConsoleCtrlHandler failed");
+		}
+		CtrlCHandler::m_registered_handler = true;
 	}
 }
 
@@ -24,7 +37,15 @@ CtrlCHandler::~CtrlCHandler()
 {
 	try
 	{
-		SetConsoleCtrlHandler(m_handler, false); // TODO: See what to do if it fails
+		if (nullptr != m_handler)
+		{
+			CtrlCHandler::m_registrations.remove(m_handler);
+			if (CtrlCHandler::m_registrations.empty())
+			{
+				SetConsoleCtrlHandler(ctrl_handler, false); // TODO: See what to do if it fails
+				CtrlCHandler::m_registered_handler = false;
+			}
+		}
 	}
 	catch (...)
 	{

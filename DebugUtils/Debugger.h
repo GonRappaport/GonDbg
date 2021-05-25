@@ -5,29 +5,47 @@
 
 #include "AutoCloseHandle.hpp"
 #include "CtrlCHandler.h"
+#include "IDebuggedProcess.h"
 
 using PFN_WAITFORDEBUGEVENT = decltype(&WaitForDebugEvent);
 
 #pragma once
-class Debugger
+class Debugger :
+	public ICtrlHandler
 {
 public:
-	Debugger(const HANDLE debugged_process_handle, const DWORD debugging_thread_id) :
-		m_debuggee_process_handle(debugged_process_handle),
-		m_break_handler(dispatch_user_breakins_handler, this),
+	Debugger(std::unique_ptr<IDebuggedProcess>&& debugged_process, const DWORD debugging_thread_id) :
+		m_debugged_process(std::move(debugged_process)),
+		m_break_handler(this),
 		m_debugger_tid(debugging_thread_id),
 		wait_for_debug_event(_cache_wait_for_debug_event())/*,
 		m_threads(),
 		m_modules()*/
 	{};
 
+	Debugger(const Debugger&) = delete;
+	Debugger& operator=(const Debugger&) = delete;
+
+	Debugger(Debugger&& dbg) noexcept :
+		m_debugged_process(std::move(dbg.m_debugged_process)),
+		m_break_handler(std::move(dbg.m_break_handler)),
+		m_debugger_tid(dbg.m_debugger_tid),
+		wait_for_debug_event(dbg.wait_for_debug_event)/*,
+		m_threads(std::move(dbg.m_threads)),
+		m_modules(std::move(dbg.m_modules))*/
+	{}
+
 	void debug();
+
+	static Debugger&& attach_to_process(const DWORD pid, bool is_invasive);
+	static Debugger&& attach_to_process(const std::wstring&, bool is_invasive);
+	static Debugger&& debug_new_process(const std::wstring& exe_path);
 
 private:
 	// Initial data
 	// Only the thread that initiated debugging can wait for debug events for a given process
-	const AutoCloseHandle m_debuggee_process_handle;
-	const CtrlCHandler m_break_handler;
+	std::unique_ptr<IDebuggedProcess> m_debugged_process;
+	CtrlCHandler m_break_handler;
 	const DWORD m_debugger_tid;
 	const PFN_WAITFORDEBUGEVENT wait_for_debug_event;
 
@@ -48,17 +66,5 @@ private:
 	DWORD dispatch_debug_string(const DEBUG_EVENT& debug_event);
 	DWORD dispatch_rip(const DEBUG_EVENT& debug_event);
 
-	BOOL dispatch_user_breakins(DWORD dwCtrlType);
-
-	static BOOL WINAPI dispatch_user_breakins_handler(DWORD ctrl_type, void* context);
+	virtual bool handle_control(const DWORD ctrl_type);
 };
-
-using DebuggerPtr = std::unique_ptr<Debugger>;
-
-namespace DebuggerUtils
-{
-	DebuggerPtr attach(const DWORD pid, bool is_invasive);
-	DebuggerPtr attach(const std::wstring&, bool is_invasive);
-
-	DebuggerPtr create(const std::wstring& exe_path);
-}

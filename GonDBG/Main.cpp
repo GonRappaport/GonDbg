@@ -22,7 +22,7 @@ SafeMain(
 
 		auto params = ArgumentParser::Parse(raw_parameters);
 
-		DebuggerPtr debugger;
+		std::unique_ptr<Debugger> debugger;
 
 		bool is_invasive = true;
 		switch (params.debugee_type)
@@ -33,15 +33,15 @@ SafeMain(
 		case DebugTargetType::Attach:
 			if (params.debugee_identifier == DebugeeIdentifier::FilePath)
 			{
-				debugger = DebuggerUtils::attach(params.debugee_path, is_invasive);
+				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_path, is_invasive));
 			}
 			else
 			{
-				debugger = DebuggerUtils::attach(params.debugee_pid, is_invasive);
+				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_pid, is_invasive));
 			}
 			break;
 		case DebugTargetType::Create:
-			debugger = DebuggerUtils::create(params.debugee_path);
+			debugger = std::make_unique<Debugger>(Debugger::debug_new_process(params.debugee_path));
 			break;
 		}
 

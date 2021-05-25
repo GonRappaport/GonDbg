@@ -1,5 +1,6 @@
 #include "Debugger.h"
 #include "ProcUtils.h"
+#include "Process.h"
 
 void Debugger::debug()
 {
@@ -12,6 +13,7 @@ void Debugger::debug()
 			throw std::exception("WaitForDebugEvent(Ex) failed"); // TODO: Add GetLastError everywhere
 		}
 		DWORD continue_status = dispatch_debug_event(debug_event);
+		UNREFERENCED_PARAMETER(continue_status);
 		ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, DBG_EXCEPTION_NOT_HANDLED);
 	}
 }
@@ -43,45 +45,69 @@ DWORD Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)
 	}
 }
 
+DWORD Debugger::dispatch_exception(const DEBUG_EVENT& debug_event)
+{
+	UNREFERENCED_PARAMETER(debug_event);
+	return 0;
+}
+
 DWORD Debugger::dispatch_thread_creation(const DEBUG_EVENT& debug_event)
 {
+	UNREFERENCED_PARAMETER(debug_event);
 	return 0;
 }
 
 DWORD Debugger::dispatch_process_creation(const DEBUG_EVENT& debug_event)
 {
+	UNREFERENCED_PARAMETER(debug_event);
 	return 0;
 }
 
 DWORD Debugger::dispatch_thread_termination(const DEBUG_EVENT& debug_event)
 {
+	UNREFERENCED_PARAMETER(debug_event);
 	return 0;
 }
 
 DWORD Debugger::dispatch_process_termination(const DEBUG_EVENT& debug_event)
 {
+	UNREFERENCED_PARAMETER(debug_event);
 	return 0;
 }
 
 DWORD Debugger::dispatch_module_load(const DEBUG_EVENT& debug_event)
 {
+	UNREFERENCED_PARAMETER(debug_event);
 	return 0;
 }
 
 DWORD Debugger::dispatch_module_unload(const DEBUG_EVENT& debug_event)
 {
+	UNREFERENCED_PARAMETER(debug_event);
 	return 0;
 }
 
-DWORD Debugger::dispatch_exception(const DEBUG_EVENT& debug_event)
+DWORD Debugger::dispatch_debug_string(const DEBUG_EVENT& debug_event)
 {
+	UNREFERENCED_PARAMETER(debug_event);
 	return 0;
 }
 
-BOOL WINAPI Debugger::dispatch_user_breakins(DWORD dwCtrlType)
+DWORD Debugger::dispatch_rip(const DEBUG_EVENT& debug_event)
+{
+	UNREFERENCED_PARAMETER(debug_event);
+	return 0;
+}
+
+bool Debugger::handle_control(const DWORD ctrl_type)
 {
 	// TODO: See what to do if it fails. Is it even the same thread?
-	DebugBreakProcess(m_debuggee_process_handle.get_value());
+	if (ctrl_type == CTRL_C_EVENT)
+	{
+		DebugBreakProcess(m_debugged_process->get_process_handle());
+		// TODO: Return true to avoid the process from terminating?
+	}
+	return false;
 }
 
 PFN_WAITFORDEBUGEVENT Debugger::_cache_wait_for_debug_event()
@@ -102,47 +128,20 @@ PFN_WAITFORDEBUGEVENT Debugger::_cache_wait_for_debug_event()
 	return reinterpret_cast<PFN_WAITFORDEBUGEVENT>(retval);
 }
 
-DebuggerPtr DebuggerUtils::attach(const DWORD pid, bool is_invasive)
+Debugger&& Debugger::attach_to_process(const DWORD pid, bool is_invasive)
 {
-	return std::make_unique<Debugger>(nullptr, 0);
+	UNREFERENCED_PARAMETER(pid);
+	UNREFERENCED_PARAMETER(is_invasive);
+	throw std::exception();
 }
 
-DebuggerPtr DebuggerUtils::attach(const std::wstring& process_name, bool is_invasive)
+Debugger&& Debugger::attach_to_process(const std::wstring& process_name, bool is_invasive)
 {
 	DWORD pid = ProcUtils::process_name_to_pid(process_name);
-	return DebuggerUtils::attach(pid, is_invasive);
+	return Debugger::attach_to_process(pid, is_invasive);
 }
 
-DebuggerPtr DebuggerUtils::create(const std::wstring& exe_path)
+Debugger&& Debugger::debug_new_process(const std::wstring& exe_path)
 {
-	STARTUPINFOW startup_info = { 0 };
-	PROCESS_INFORMATION process_info = { 0 };
-
-	startup_info.cb = sizeof(startup_info);
-
-	if (!CreateProcessW(exe_path.c_str(),
-		nullptr /* TODO: Add command line support */,
-		nullptr,
-		nullptr,
-		false,
-		DEBUG_ONLY_THIS_PROCESS /* TODO: Support debugging child processes */,
-		nullptr,
-		nullptr,
-		&startup_info,
-		&process_info))
-	{
-		throw std::exception("Process creation failed");
-	}
-
-	CloseHandle(process_info.hThread);
-
-	try
-	{
-		return std::make_unique<Debugger>(process_info.hProcess, GetCurrentThreadId());
-	}
-	catch (...)
-	{
-		CloseHandle(process_info.hProcess);
-		throw;
-	}
+	return std::move(Debugger(std::move(std::make_unique<Process>(exe_path)), GetCurrentThreadId()));
 }

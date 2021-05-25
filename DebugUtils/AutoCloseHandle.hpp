@@ -11,11 +11,23 @@ public:
 		m_handle(_validate_handle(handle))
 	{}
 
+	AutoCloseHandleImpl(const AutoCloseHandleImpl&) = delete;
+	AutoCloseHandleImpl& operator=(const AutoCloseHandleImpl&) = delete;
+
+	AutoCloseHandleImpl(AutoCloseHandleImpl&& ach) noexcept:
+		m_handle(_validate_handle(ach.m_handle)) // TODO: Declared as noexcept but _validate_handle may throw... Can a class be moved twice?
+	{
+		ach.m_handle = invalid_value;
+	}
+
 	~AutoCloseHandleImpl()
 	{
 		try
 		{
-			CloseHandle(m_handle);
+			if (m_handle != invalid_value)
+			{
+				CloseHandle(m_handle);
+			}
 		}
 		catch (...)
 		{
@@ -23,11 +35,11 @@ public:
 		}
 	}
 
-	const HANDLE get_value() const { return m_handle; }
+	HANDLE get_value() const { return m_handle; }
 
 
 private:
-	const HANDLE _validate_handle(const HANDLE handle)
+	HANDLE _validate_handle(const HANDLE handle)
 	{
 		if (handle == invalid_value)
 		{
@@ -35,7 +47,7 @@ private:
 		}
 		return handle;
 	}
-	const HANDLE m_handle;
+	HANDLE m_handle;
 };
 
 using AutoCloseHandle = AutoCloseHandleImpl<nullptr>;
