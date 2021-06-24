@@ -51,7 +51,7 @@ AutoCloseHandle Process::_s_create_process(const std::wstring& exe_path, std::ws
 		nullptr,
 		nullptr,
 		false,
-		DEBUG_ONLY_THIS_PROCESS /* TODO: Support debugging child processes */,
+		CREATE_NEW_CONSOLE | DEBUG_ONLY_THIS_PROCESS/* TODO: Support debugging child processes */,
 		nullptr,
 		nullptr,
 		&startup_info,

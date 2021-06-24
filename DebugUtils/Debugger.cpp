@@ -18,9 +18,12 @@ void Debugger::debug()
 				throw std::exception("WaitForDebugEvent(Ex) failed"); // TODO: Add GetLastError everywhere
 			}
 			DWORD continue_status = dispatch_debug_event(debug_event);
-			UNREFERENCED_PARAMETER(continue_status);
+			while (continue_status == 1) // TODO: Define enum
+			{
+				continue_status = handle_user_command();
+			}
 			// TODO: For time travel debugging, hook this function with one that does nothing (I think) to simply "debug" the trace. You'll also hook the wait function
-			if (!ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, DBG_EXCEPTION_NOT_HANDLED))
+			if (!ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, continue_status))
 			{
 				throw std::exception("ContinueDebugEvent failed");
 			}
@@ -105,9 +108,9 @@ DWORD Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 		debug_event.get_exception_address());
 	if (debug_event.is_debug_break())
 	{
-		m_io_handler->read();
+		return 1;
 	}
-	return 0;
+	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_thread_creation(CreateThreadDebugEvent& debug_event)
@@ -116,7 +119,7 @@ DWORD Debugger::dispatch_thread_creation(CreateThreadDebugEvent& debug_event)
 		debug_event.get_thread_id(),
 		debug_event.get_start_address());
 	// TODO: Cache the thread handle in the threads list
-	return 0;
+	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_process_creation(CreateProcessDebugEvent& debug_event)
@@ -126,7 +129,7 @@ DWORD Debugger::dispatch_process_creation(CreateProcessDebugEvent& debug_event)
 		debug_event.get_image_path().c_str(),
 		debug_event.get_thread_id());
 	// TODO: Cache the process handles
-	return 0;
+	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_thread_termination(ExitThreadDebugEvent& debug_event)
@@ -134,7 +137,7 @@ DWORD Debugger::dispatch_thread_termination(ExitThreadDebugEvent& debug_event)
 	m_io_handler->write_formatted(L"Thread died. Thread ID: %lu, exit code: %lu",
 		debug_event.get_thread_id(),
 		debug_event.get_exit_code());
-	return 0;
+	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_process_termination(ExitProcessDebugEvent& debug_event)
@@ -143,7 +146,7 @@ DWORD Debugger::dispatch_process_termination(ExitProcessDebugEvent& debug_event)
 		debug_event.get_process_id(),
 		debug_event.get_exit_code());
 	throw std::exception("Debugged process died");
-	return 0;
+	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_module_load(LoadDllDebugEvent& debug_event)
@@ -151,27 +154,43 @@ DWORD Debugger::dispatch_module_load(LoadDllDebugEvent& debug_event)
 	m_io_handler->write_formatted(L"Module loaded. Module address: 0x%p, module name: %ws",
 		debug_event.get_image_base(),
 		debug_event.get_image_path().c_str());
-	return 0;
+	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_module_unload(UnloadDllDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Module unloaded. Module address: 0x%p",
 		debug_event.get_image_base());
-	return 0;
+	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_debug_string(DebugStringDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Debug string output: %ws", 
 		debug_event.get_debug_string().c_str());
-	return 0;
+	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_rip(RipDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"RIP raised");
-	return 0;
+	return DBG_EXCEPTION_NOT_HANDLED;
+}
+
+DWORD Debugger::handle_user_command()
+{
+	auto command = m_io_handler->read();
+	
+	if (0 == wcscmp(command.c_str(), L"g"))
+	{
+		return DBG_EXCEPTION_NOT_HANDLED;
+	}
+	else
+	{
+		m_io_handler->write(L"Unrecognized command");
+	}
+
+	return 1;
 }
 
 bool Debugger::handle_control(const DWORD ctrl_type)

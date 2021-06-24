@@ -9,7 +9,9 @@
 
 std::wstring ConsoleIO::read()
 {
-    return std::wstring();
+    std::wstring input;
+    std::wcin >> input;
+    return input;
 }
 
 void ConsoleIO::write(const std::wstring& data)

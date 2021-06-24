@@ -85,6 +85,8 @@ private:
 	DWORD dispatch_debug_string(DebugStringDebugEvent& debug_event);
 	DWORD dispatch_rip(RipDebugEvent& debug_event);
 
+	DWORD handle_user_command();
+
 	virtual bool handle_control(const DWORD ctrl_type);
 
 	std::wstring _read_remote_string(PVOID base_address, bool is_unicode);
