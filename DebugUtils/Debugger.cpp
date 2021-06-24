@@ -4,9 +4,6 @@
 #include "ProcUtils.h"
 #include "Process.h"
 
-// TODO: Replace this with io.h
-#include <iostream>
-
 void Debugger::debug()
 {
 	DEBUG_EVENT debug_event;
@@ -22,7 +19,10 @@ void Debugger::debug()
 			DWORD continue_status = dispatch_debug_event(debug_event);
 			UNREFERENCED_PARAMETER(continue_status);
 			// TODO: For time travel debugging, hook this function with one that does nothing (I think) to simply "debug" the trace. You'll also hook the wait function
-			ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, DBG_EXCEPTION_NOT_HANDLED);
+			if (!ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, DBG_EXCEPTION_NOT_HANDLED))
+			{
+				throw std::exception("ContinueDebugEvent failed");
+			}
 		}
 	}
 	catch (const std::exception& e)
@@ -32,31 +32,6 @@ void Debugger::debug()
 			throw;
 		}
 	}
-}
-
-std::wstring Debugger::_read_remote_string(PVOID base_address, bool is_unicode)
-{
-	if (nullptr != base_address)
-	{
-		auto remote_address = m_debugged_process->read_pointer(base_address);
-		if (nullptr != remote_address)
-		{
-			if (is_unicode)
-			{
-				auto s = m_debugged_process->read_wstring(remote_address);
-				return s;
-			}
-			else
-			{
-				auto remote_ascii_name = m_debugged_process->read_string(remote_address);
-				m_io_handler->write_formatted(L"Ascii string: %s\n", remote_ascii_name.c_str());
-				return std::wstring(remote_ascii_name.begin(), remote_ascii_name.end());
-			}
-		}
-	}
-
-	// TODO: Throwing an exception would be more annoying to implement
-	return std::wstring(L"");
 }
 
 DWORD Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)

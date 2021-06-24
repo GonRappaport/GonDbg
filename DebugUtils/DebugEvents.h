@@ -6,6 +6,7 @@
 
 #include "Debugger.h"
 
+class Debugger;
 class DebugEvent
 {
 public:
@@ -95,14 +96,14 @@ public:
 	{
 		if (!m_image_path.has_value())
 		{
-			m_image_path = _read_remote_string(m_image_path_data.first, m_image_path_data.second);
+			m_image_path = _deref_read_remote_string(m_image_path_data.first, m_image_path_data.second);
 		}
 		return m_image_path.value();
 	}
 
 	HANDLE get_file_handle() const { return m_file_handle.get_value(); }
 	// TODO: Is this legit?
-	AutoCloseHandle&& detach_file_handle() { return std::exchange(m_file_handle, nullptr); }
+	AutoCloseHandle detach_file_handle() { return std::move(m_file_handle); }
 
 private:
 	AutoCloseHandle m_file_handle;
@@ -167,14 +168,14 @@ public:
 	{
 		if (!m_image_path.has_value())
 		{
-			m_image_path = _read_remote_string(m_image_path_data.first, m_image_path_data.second);
+			m_image_path = _deref_read_remote_string(m_image_path_data.first, m_image_path_data.second);
 		}
 		return m_image_path.value();
 	}
 
 	HANDLE get_file_handle() const { return m_file_handle.get_value(); }
 	// TODO: Is this legit?
-	AutoCloseHandle&& detach_file_handle() { return std::exchange(m_file_handle, nullptr); }
+	AutoCloseHandle detach_file_handle() { return std::move(m_file_handle); }
 
 private:
 	AutoCloseHandle m_file_handle;

@@ -39,7 +39,6 @@ public:
 
 	HANDLE get_value() const { return m_handle; }
 
-
 private:
 	HANDLE _validate_handle(const HANDLE handle)
 	{

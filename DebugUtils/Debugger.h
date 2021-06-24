@@ -13,7 +13,15 @@
 
 using PFN_WAITFORDEBUGEVENT = decltype(&WaitForDebugEvent);
 
-#pragma once
+class ExceptionDebugEvent;
+class CreateThreadDebugEvent;
+class CreateProcessDebugEvent;
+class ExitThreadDebugEvent;
+class ExitProcessDebugEvent;
+class LoadDllDebugEvent;
+class UnloadDllDebugEvent;
+class DebugStringDebugEvent;
+class RipDebugEvent;
 class Debugger :
 	public ICtrlHandler
 {
