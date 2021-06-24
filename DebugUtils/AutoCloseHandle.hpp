@@ -2,13 +2,15 @@
 
 #include <Windows.h>
 #include <exception>
+#include <functional>
 
 template <HANDLE invalid_value>
 class AutoCloseHandleImpl
 {
 public:
-	explicit AutoCloseHandleImpl(const HANDLE handle) :
-		m_handle(_validate_handle(handle))
+	explicit AutoCloseHandleImpl(const HANDLE handle, std::function<void(HANDLE)> closing_function=CloseHandle) :
+		m_handle(_validate_handle(handle)),
+		m_closer(closing_function)
 	{}
 
 	AutoCloseHandleImpl(const AutoCloseHandleImpl&) = delete;
@@ -17,7 +19,7 @@ public:
 	AutoCloseHandleImpl(AutoCloseHandleImpl&& ach) noexcept:
 		m_handle(_validate_handle(ach.m_handle)) // TODO: Declared as noexcept but _validate_handle may throw... Can a class be moved twice?
 	{
-		ach.m_handle = invalid_value;
+		ach.m_handle = invalid_value; // TODO: std::exchange?
 	}
 
 	~AutoCloseHandleImpl()
@@ -26,7 +28,7 @@ public:
 		{
 			if (m_handle != invalid_value)
 			{
-				CloseHandle(m_handle);
+				m_closer(m_handle);
 			}
 		}
 		catch (...)
@@ -48,6 +50,7 @@ private:
 		return handle;
 	}
 	HANDLE m_handle;
+	const std::function<void(HANDLE)> m_closer;
 };
 
 using AutoCloseHandle = AutoCloseHandleImpl<nullptr>;

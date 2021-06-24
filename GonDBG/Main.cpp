@@ -5,6 +5,7 @@
 
 #include "ArgumentParser.h"
 #include "Debugger.h"
+#include "ConsoleIO.h"
 
 static
 INT
@@ -15,6 +16,8 @@ SafeMain(
 {
 	try
 	{
+		std::shared_ptr<ConsoleIO> io = std::make_shared<ConsoleIO>();
+
 		const std::vector<std::wstring_view> raw_parameters(
 			ppwszArgv + 1, // Skip the debugger path
 			ppwszArgv + iArgc
@@ -33,15 +36,15 @@ SafeMain(
 		case DebugTargetType::Attach:
 			if (params.debugee_identifier == DebugeeIdentifier::FilePath)
 			{
-				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_path, is_invasive));
+				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_path, is_invasive, io));
 			}
 			else
 			{
-				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_pid, is_invasive));
+				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_pid, is_invasive, io));
 			}
 			break;
 		case DebugTargetType::Create:
-			debugger = std::make_unique<Debugger>(Debugger::debug_new_process(params.debugee_path));
+			debugger = std::make_unique<Debugger>(Debugger::debug_new_process(params.debugee_path, io));
 			break;
 		}
 
