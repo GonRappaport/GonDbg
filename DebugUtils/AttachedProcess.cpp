@@ -20,6 +20,7 @@ bool AttachedProcess::is_64_bit() const
 	return m_64_bit;
 }
 
+// TODO: Combine this and Process.h to inherit from IRunningProcess which will implement these functions and similar. This is in contrast to RecordedProcess which is for TTD
 std::vector<BYTE> AttachedProcess::read_memory(PVOID base_address, SIZE_T size)
 {
 	SIZE_T bytes_read = 0;

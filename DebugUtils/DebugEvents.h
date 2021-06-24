@@ -50,6 +50,7 @@ public:
 	DWORD get_exception_code() const { return m_exception_record.ExceptionCode; }
 	PVOID get_exception_address() const { return m_exception_record.ExceptionAddress; }
 	bool is_first_chance() const { return m_first_chance; }
+	bool is_debug_break() const { return m_exception_record.ExceptionCode == EXCEPTION_BREAKPOINT; }
 
 private:
 	const EXCEPTION_RECORD m_exception_record;

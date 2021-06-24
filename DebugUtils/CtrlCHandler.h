@@ -13,6 +13,7 @@ public:
 class CtrlCHandler
 {
 public:
+	// TODO: Can't keep a pointer, as the object is moved.
 	explicit CtrlCHandler(ICtrlHandler* handler);
 
 	CtrlCHandler(const CtrlCHandler&) = delete;

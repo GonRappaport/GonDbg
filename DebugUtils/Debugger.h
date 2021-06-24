@@ -49,6 +49,8 @@ public:
 		m_modules(std::move(dbg.m_modules))*/
 	{}
 
+	virtual ~Debugger() = default;
+
 	void debug();
 
 	static Debugger attach_to_process_no_inject(const DWORD pid, std::shared_ptr<ISimpleIO> io_handler);

@@ -103,6 +103,10 @@ DWORD Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 		debug_event.is_first_chance(),
 		debug_event.get_exception_code(),
 		debug_event.get_exception_address());
+	if (debug_event.is_debug_break())
+	{
+		m_io_handler->read();
+	}
 	return 0;
 }
 
@@ -177,6 +181,7 @@ bool Debugger::handle_control(const DWORD ctrl_type)
 	{
 		DebugBreakProcess(m_debugged_process->get_process_handle());
 		// TODO: Return true to avoid the process from terminating?
+		return true;
 	}
 	return false;
 }
