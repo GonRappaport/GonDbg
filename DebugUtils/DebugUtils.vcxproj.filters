@@ -45,6 +45,9 @@
     <ClInclude Include="DebugEvents.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AttachedProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Debugger.cpp">
@@ -69,6 +72,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DebugEvents.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AttachedProcess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IDebuggedProcess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

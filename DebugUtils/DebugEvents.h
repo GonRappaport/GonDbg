@@ -10,6 +10,8 @@ class Debugger;
 class DebugEvent
 {
 public:
+	// TODO: Instead of keeping Debugger, keep IDebuggedProcess. It both solves your circular dependency (Maybe, see that you include headers correctly) and makes more sense
+	// TODO: It will also be better since once you support multiple processes, you could relate each debug event to a specific process in Debugger, instead of doing that here
 	DebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
 		m_thread_id(debug_event.dwThreadId),
 		m_process_id(debug_event.dwProcessId),

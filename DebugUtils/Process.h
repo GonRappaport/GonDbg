@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include "IDebuggedProcess.h"
 #include "AutoCloseHandle.hpp"
 
@@ -37,20 +35,12 @@ public:
 	virtual std::vector<BYTE> read_memory(PVOID base_address, SIZE_T size);
 	virtual void write_memory(PVOID base_address, std::vector<BYTE> data);
 
-	virtual PVOID read_pointer(PVOID base_address);
-	virtual std::string read_string(PVOID base_address);
-	virtual std::wstring read_wstring(PVOID base_address);
-	virtual std::string read_string_capped(PVOID base_address, SIZE_T max_length);
-	virtual std::wstring read_wstring_capped(PVOID base_address, SIZE_T max_length);
-
 private:
     AutoCloseHandle m_handle;
 	const DWORD m_process_id;
 	const bool m_64_bit;
 
 	static AutoCloseHandle _s_create_process(const std::wstring& exe_path, std::wstring command_line);
-	// TODO: Actually most API can be moved to the "Interface" class
-	std::vector<BYTE> _read_page(PVOID base_address);
 	static bool _s_is_64_bit(const HANDLE);
 };
 

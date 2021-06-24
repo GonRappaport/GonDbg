@@ -18,6 +18,12 @@ SafeMain(
 	{
 		std::shared_ptr<ConsoleIO> io = std::make_shared<ConsoleIO>();
 
+		if (iArgc == 1)
+		{
+			io->write_formatted(L"Usage: %s <create|attach [--no-inject]> <PID/Path>", ppwszArgv[0]);
+			return 1;
+		}
+
 		const std::vector<std::wstring_view> raw_parameters(
 			ppwszArgv + 1, // Skip the debugger path
 			ppwszArgv + iArgc
@@ -27,20 +33,26 @@ SafeMain(
 
 		std::unique_ptr<Debugger> debugger;
 
-		bool is_invasive = true;
 		switch (params.debugee_type)
 		{
 		case DebugTargetType::NonInvasiveAttach:
-			is_invasive = false;
-			__fallthrough;
-		case DebugTargetType::Attach:
 			if (params.debugee_identifier == DebugeeIdentifier::FilePath)
 			{
-				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_path, is_invasive, io));
+				debugger = std::make_unique<Debugger>(Debugger::attach_to_process_no_inject(params.debugee_path, io));
 			}
 			else
 			{
-				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_pid, is_invasive, io));
+				debugger = std::make_unique<Debugger>(Debugger::attach_to_process_no_inject(params.debugee_pid, io));
+			}
+			break;
+		case DebugTargetType::Attach:
+			if (params.debugee_identifier == DebugeeIdentifier::FilePath)
+			{
+				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_path, io));
+			}
+			else
+			{
+				debugger = std::make_unique<Debugger>(Debugger::attach_to_process(params.debugee_pid, io));
 			}
 			break;
 		case DebugTargetType::Create:
@@ -59,6 +71,7 @@ SafeMain(
 	}
 	catch (...)
 	{
+		// TODO: You got this when passing gondbg.exe attach 1
 		std::wcout << L"Unknwon exception";
 		return -2;
 	}

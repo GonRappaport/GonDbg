@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <vector>
+#include <string>
 
 /*
 class RemotePointer
@@ -25,11 +26,14 @@ public:
 	virtual std::vector<BYTE> read_memory(PVOID base_address, SIZE_T size) = 0;
 	virtual void write_memory(PVOID base_address, std::vector<BYTE> data) = 0;
 	// TODO: That requires you to keep data of if the process is 32 or 64 bit
-	virtual PVOID read_pointer(PVOID base_address) = 0;
-	virtual std::string read_string(PVOID base_address) = 0;
-	virtual std::wstring read_wstring(PVOID base_address) = 0;
-	virtual std::string read_string_capped(PVOID base_address, SIZE_T max_length) = 0;
-	virtual std::wstring read_wstring_capped(PVOID base_address, SIZE_T max_length) = 0;
+	virtual PVOID read_pointer(PVOID base_address);
+	virtual std::string read_string(PVOID base_address);
+	virtual std::wstring read_wstring(PVOID base_address);
+	virtual std::string read_string_capped(PVOID base_address, SIZE_T max_length);
+	virtual std::wstring read_wstring_capped(PVOID base_address, SIZE_T max_length);
 
 	virtual ~IDebuggedProcess() = default;
+
+protected:
+	virtual std::vector<BYTE> _read_page(PVOID base_address);
 };

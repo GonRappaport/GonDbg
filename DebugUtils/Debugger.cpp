@@ -3,6 +3,7 @@
 #include "Debugger.h"
 #include "ProcUtils.h"
 #include "Process.h"
+#include "AttachedProcess.h"
 
 void Debugger::debug()
 {
@@ -116,9 +117,10 @@ DWORD Debugger::dispatch_thread_creation(CreateThreadDebugEvent& debug_event)
 
 DWORD Debugger::dispatch_process_creation(CreateProcessDebugEvent& debug_event)
 {
-	m_io_handler->write_formatted(L"Process created. Process ID: %lu, process name: %ws",
+	m_io_handler->write_formatted(L"Process created. Process ID: %lu, process name: %ws, thread ID: %lu",
 		debug_event.get_process_id(),
-		debug_event.get_image_path().c_str());
+		debug_event.get_image_path().c_str(),
+		debug_event.get_thread_id());
 	// TODO: Cache the process handles
 	return 0;
 }
@@ -197,21 +199,31 @@ PFN_WAITFORDEBUGEVENT Debugger::_cache_wait_for_debug_event()
 	return reinterpret_cast<PFN_WAITFORDEBUGEVENT>(retval);
 }
 
-Debugger Debugger::attach_to_process(const DWORD pid, bool is_invasive, std::shared_ptr<ISimpleIO> io_handler)
+Debugger Debugger::debug_new_process(const std::wstring& exe_path, std::shared_ptr<ISimpleIO> io_handler)
+{
+	return Debugger(std::make_unique<Process>(exe_path), GetCurrentThreadId(), io_handler);
+}
+
+Debugger Debugger::attach_to_process(const DWORD pid, std::shared_ptr<ISimpleIO> io_handler)
+{
+	return Debugger(std::make_unique<AttachedProcess>(pid), GetCurrentThreadId(), io_handler);
+}
+
+Debugger Debugger::attach_to_process(const std::wstring& process_name, std::shared_ptr<ISimpleIO> io_handler)
+{
+	DWORD pid = ProcUtils::process_name_to_pid(process_name);
+	return Debugger::attach_to_process(pid, io_handler);
+}
+
+Debugger Debugger::attach_to_process_no_inject(const DWORD pid, std::shared_ptr<ISimpleIO> io_handler)
 {
 	UNREFERENCED_PARAMETER(pid);
-	UNREFERENCED_PARAMETER(is_invasive);
 	UNREFERENCED_PARAMETER(io_handler);
 	throw std::exception();
 }
 
-Debugger Debugger::attach_to_process(const std::wstring& process_name, bool is_invasive, std::shared_ptr<ISimpleIO> io_handler)
+Debugger Debugger::attach_to_process_no_inject(const std::wstring& process_name, std::shared_ptr<ISimpleIO> io_handler)
 {
 	DWORD pid = ProcUtils::process_name_to_pid(process_name);
-	return Debugger::attach_to_process(pid, is_invasive, io_handler);
-}
-
-Debugger Debugger::debug_new_process(const std::wstring& exe_path, std::shared_ptr<ISimpleIO> io_handler)
-{
-	return Debugger(std::make_unique<Process>(exe_path), GetCurrentThreadId(), io_handler);
+	return Debugger::attach_to_process_no_inject(pid, io_handler);
 }

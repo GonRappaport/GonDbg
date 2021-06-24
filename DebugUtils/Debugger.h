@@ -51,8 +51,10 @@ public:
 
 	void debug();
 
-	static Debugger attach_to_process(const DWORD pid, bool is_invasive, std::shared_ptr<ISimpleIO> io_handler);
-	static Debugger attach_to_process(const std::wstring&, bool is_invasive, std::shared_ptr<ISimpleIO> io_handler);
+	static Debugger attach_to_process_no_inject(const DWORD pid, std::shared_ptr<ISimpleIO> io_handler);
+	static Debugger attach_to_process_no_inject(const std::wstring& process_name, std::shared_ptr<ISimpleIO> io_handler);
+	static Debugger attach_to_process(const DWORD pid, std::shared_ptr<ISimpleIO> io_handler);
+	static Debugger attach_to_process(const std::wstring&, std::shared_ptr<ISimpleIO> io_handler);
 	static Debugger debug_new_process(const std::wstring& exe_path, std::shared_ptr<ISimpleIO> io_handler);
 
 private:

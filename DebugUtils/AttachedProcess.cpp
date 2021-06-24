@@ -1,25 +1,26 @@
-#include "Process.h"
+#include "AttachedProcess.h"
 
-HANDLE Process::get_process_handle() const
+HANDLE AttachedProcess::get_process_handle() const
 {
 	return m_handle.get_value();
 }
 
-DWORD Process::get_process_id() const
+DWORD AttachedProcess::get_process_id() const
 {
 	if (0 == m_process_id)
 	{
+		// TODO: Or can it? ;)
 		throw std::exception("Process ID can't be 0");
 	}
 	return m_process_id;
 }
 
-bool Process::is_64_bit() const
+bool AttachedProcess::is_64_bit() const
 {
 	return m_64_bit;
 }
 
-std::vector<BYTE> Process::read_memory(PVOID base_address, SIZE_T size)
+std::vector<BYTE> AttachedProcess::read_memory(PVOID base_address, SIZE_T size)
 {
 	SIZE_T bytes_read = 0;
 	std::vector<BYTE> data(size);
@@ -33,42 +34,29 @@ std::vector<BYTE> Process::read_memory(PVOID base_address, SIZE_T size)
 	return data;
 }
 
-void Process::write_memory(PVOID base_address, std::vector<BYTE> data)
+void AttachedProcess::write_memory(PVOID base_address, std::vector<BYTE> data)
 {
 	UNREFERENCED_PARAMETER(base_address);
 	UNREFERENCED_PARAMETER(data);
 }
 
-AutoCloseHandle Process::_s_create_process(const std::wstring& exe_path, std::wstring command_line)
+AutoCloseHandle AttachedProcess::_s_attach_process(const DWORD process_id)
 {
-	STARTUPINFOW startup_info = { 0 };
-	PROCESS_INFORMATION process_info = { 0 };
+	// TODO: I request more rights here than are requested by DebugActiveProcess. Maybe minimize it? Or allow it to not be used?
+	AutoCloseHandle process_handle(OpenProcess(PROCESS_ALL_ACCESS, false, process_id));
 
-	startup_info.cb = sizeof(startup_info);
-
-	if (!CreateProcessW(exe_path.c_str(),
-		(command_line.length() > 0) ? (command_line.data()) : (nullptr),
-		nullptr,
-		nullptr,
-		false,
-		DEBUG_ONLY_THIS_PROCESS /* TODO: Support debugging child processes */,
-		nullptr,
-		nullptr,
-		&startup_info,
-		&process_info))
+	if (!DebugActiveProcess(process_id))
 	{
-		throw std::exception("Process creation failed");
+		throw std::exception("DebugActiveProcess failed");
 	}
 
-	CloseHandle(process_info.hThread);
-
-	return AutoCloseHandle(process_info.hProcess);
+	return std::move(process_handle);
 }
 
-bool Process::_s_is_64_bit(const HANDLE process_handle)
+bool AttachedProcess::_s_is_64_bit(const HANDLE process_handle)
 {
 	SYSTEM_INFO info;
-	
+
 	GetNativeSystemInfo(&info);
 
 	if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)

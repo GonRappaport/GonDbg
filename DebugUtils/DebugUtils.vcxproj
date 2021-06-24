@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AttachedProcess.h" />
     <ClInclude Include="AutoCloseHandle.hpp" />
     <ClInclude Include="ConsoleIO.h" />
     <ClInclude Include="CreatedThread.h" />
@@ -31,11 +32,13 @@
     <ClInclude Include="ProcUtils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AttachedProcess.cpp" />
     <ClCompile Include="ConsoleIO.cpp" />
     <ClCompile Include="CreatedThread.cpp" />
     <ClCompile Include="CtrlCHandler.cpp" />
     <ClCompile Include="DebugEvents.cpp" />
     <ClCompile Include="Debugger.cpp" />
+    <ClCompile Include="IDebuggedProcess.cpp" />
     <ClCompile Include="ISimpleIO.cpp" />
     <ClCompile Include="Process.cpp" />
     <ClCompile Include="ProcUtils.cpp" />
