@@ -40,8 +40,8 @@ public:
 		return *this;
 	}
 
-	operator PVOID() { return reinterpret_cast<PVOID>(m_address); }
-	operator DWORD64() { return m_address; }
+	operator PVOID() const { return reinterpret_cast<PVOID>(m_address); }
+	operator DWORD64() const { return m_address; }
 	DWORD64* operator&() { return &m_address; }
 
 	inline bool operator< (const RemotePointer& rhs) const { return (m_address < rhs.m_address); }

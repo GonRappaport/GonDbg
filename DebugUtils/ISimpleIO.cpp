@@ -15,7 +15,7 @@ void ISimpleIO::write_formatted(const std::wstring_view fmt, ...)
     va_end(args);
 }
 
-std::wstring ISimpleIO::format(const std::wstring_view fmt, ...) const
+std::wstring ISimpleIO::format(const std::wstring_view fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -27,7 +27,7 @@ std::wstring ISimpleIO::format(const std::wstring_view fmt, ...) const
     return formatted_output;
 }
 
-std::wstring ISimpleIO::format_bytes(const std::vector<BYTE> bytes) const
+std::wstring ISimpleIO::format_bytes(const std::vector<BYTE> bytes)
 {
     const size_t LINE_LENGTH = 0x10;
     std::wstringstream output;
@@ -45,7 +45,7 @@ std::wstring ISimpleIO::format_bytes(const std::vector<BYTE> bytes) const
     return output.str();
 }
 
-std::wstring ISimpleIO::_format(const std::wstring_view& fmt, va_list args) const
+std::wstring ISimpleIO::_format(const std::wstring_view& fmt, va_list args)
 {
     int formatted_length = _vscwprintf(fmt.data(), args);
     if (formatted_length <= 0)

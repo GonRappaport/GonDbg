@@ -7,6 +7,7 @@
 
 void Debugger::debug()
 {
+	m_io_handler->register_break_handler(this);
 	DEBUG_EVENT debug_event;
 	
 	try
@@ -128,6 +129,9 @@ DWORD Debugger::dispatch_process_creation(CreateProcessDebugEvent& debug_event)
 		debug_event.get_process_id(),
 		debug_event.get_image_path().c_str(),
 		debug_event.get_thread_id());
+
+	m_symbol_finder.load_module(debug_event.get_file_handle(), debug_event.get_image_path(), debug_event.get_image_base());
+
 	// TODO: Cache the process handles
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
@@ -154,6 +158,9 @@ DWORD Debugger::dispatch_module_load(LoadDllDebugEvent& debug_event)
 	m_io_handler->write_formatted(L"Module loaded. Module address: 0x%llX, module name: %ws",
 		static_cast<DWORD64>(debug_event.get_image_base()),
 		debug_event.get_image_path().c_str());
+
+	m_symbol_finder.load_module(debug_event.get_file_handle(), debug_event.get_image_path(), debug_event.get_image_base());
+
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
@@ -161,6 +168,7 @@ DWORD Debugger::dispatch_module_unload(UnloadDllDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Module unloaded. Module address: 0x%llX",
 		static_cast<DWORD64>(debug_event.get_image_base()));
+	m_symbol_finder.unload_module(debug_event.get_image_base());
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
@@ -184,7 +192,7 @@ DWORD Debugger::dispatch_rip(RipDebugEvent& debug_event)
 
 DWORD Debugger::handle_user_command()
 {
-	auto command = m_io_handler->read();
+	auto command = m_io_handler->prompt(L"GonDBG>");
 	
 	if (0 == command.find(L"g"))
 	{
@@ -211,15 +219,11 @@ DWORD Debugger::handle_user_command()
 
 		// TODO: Add support for invalid addresses (An exception). Maybe wrap this entire function with try
 		auto data = m_debugged_process->read_memory(address, length);
-		m_io_handler->write(m_io_handler->format_bytes(data));
+		m_io_handler->write(m_io_handler->format_bytes(data).c_str());
 	}
 	else if (0 == command.find(L"exit"))
 	{
 		throw std::exception("Exiting debugger");
-	}
-	else if (0 == command.find(L"bp"))
-	{
-
 	}
 	else if (0 == command.find(L"x"))
 	{
@@ -235,7 +239,18 @@ DWORD Debugger::handle_user_command()
 			return 1;
 		}
 
-		m_symbol_finder.get_symbol(address);
+		m_io_handler->write(m_symbol_finder.get_symbol(address));
+	}
+	else if (0 == command.find(L"lm"))
+	{
+		auto loaded_modules = m_symbol_finder.get_loaded_modules();
+		for (auto m : loaded_modules)
+		{
+			m_io_handler->write_formatted(L"0x%llX (0x%08lX): %s",
+				static_cast<DWORD64>(m.get_image_base()),
+				m.get_image_size(),
+				m.get_image_name().c_str());
+		}
 	}
 	else
 	{

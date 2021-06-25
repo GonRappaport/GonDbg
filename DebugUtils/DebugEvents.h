@@ -108,6 +108,8 @@ public:
 	// TODO: Is this legit?
 	AutoCloseHandle detach_file_handle() { return std::move(m_file_handle); }
 
+	const RemotePointer get_image_base() const { return m_image_base; }
+
 private:
 	AutoCloseHandle m_file_handle;
 	// TODO: Do these need to be closed?
