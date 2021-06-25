@@ -19,7 +19,7 @@ bool Process::is_64_bit() const
 	return m_64_bit;
 }
 
-std::vector<BYTE> Process::read_memory(PVOID base_address, SIZE_T size)
+std::vector<BYTE> Process::read_memory(RemotePointer base_address, SIZE_T size)
 {
 	SIZE_T bytes_read = 0;
 	std::vector<BYTE> data(size);
@@ -33,7 +33,7 @@ std::vector<BYTE> Process::read_memory(PVOID base_address, SIZE_T size)
 	return data;
 }
 
-void Process::write_memory(PVOID base_address, std::vector<BYTE> data)
+void Process::write_memory(RemotePointer base_address, std::vector<BYTE> data)
 {
 	UNREFERENCED_PARAMETER(base_address);
 	UNREFERENCED_PARAMETER(data);

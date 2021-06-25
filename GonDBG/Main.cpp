@@ -60,6 +60,7 @@ SafeMain(
 			break;
 		}
 
+		// TODO: Move the CtrlHandler to ConsoleIO and add a register_break_handler to ISimpleIO, then register the callback to it in the debug function and not the constructor to avoid the moves. It also makes sense a bit
 		debugger->debug();
 
 		return 0;

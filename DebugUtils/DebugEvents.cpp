@@ -1,8 +1,8 @@
 #include "DebugEvents.h"
 
-std::wstring DebugEvent::_read_remote_string(const PVOID base_address, const bool is_unicode)
+std::wstring DebugEvent::_read_remote_string(const RemotePointer base_address, const bool is_unicode)
 {
-	if (nullptr != base_address)
+	if (!base_address.is_null())
 	{
 		if (is_unicode)
 		{
@@ -19,9 +19,9 @@ std::wstring DebugEvent::_read_remote_string(const PVOID base_address, const boo
 	return std::wstring(L"");
 }
 
-std::wstring DebugEvent::_deref_read_remote_string(const PVOID base_address, const bool is_unicode)
+std::wstring DebugEvent::_deref_read_remote_string(const RemotePointer base_address, const bool is_unicode)
 {
-	if (nullptr != base_address)
+	if (!base_address.is_null())
 	{
 		auto remote_address = this->m_debugger.m_debugged_process->read_pointer(base_address);
 		return _read_remote_string(remote_address, is_unicode);
@@ -29,4 +29,10 @@ std::wstring DebugEvent::_deref_read_remote_string(const PVOID base_address, con
 
 	// TODO: Throwing an exception would be more annoying to implement
 	return std::wstring(L"");
+}
+
+bool DebugStringDebugEvent::is_relevant() const
+{
+	// TODO: Improve that according to what windbg does
+	return m_string_data.second;
 }

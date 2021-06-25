@@ -1,6 +1,7 @@
 #include "ConsoleIO.h"
 
 #include <iostream>
+#include <sstream>
 
 
 // TEMP
@@ -9,9 +10,9 @@
 
 std::wstring ConsoleIO::read()
 {
-    std::wstring input;
-    std::wcin >> input;
-    return input;
+    wchar_t line[1024];
+    std::wcin.getline(line, ARRAYSIZE(line));
+    return std::wstring(line);
 }
 
 void ConsoleIO::write(const std::wstring& data)

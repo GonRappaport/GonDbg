@@ -28,8 +28,8 @@ public:
 	virtual HANDLE get_process_handle() const;
 	virtual DWORD get_process_id() const;
 	virtual bool is_64_bit() const;
-	virtual std::vector<BYTE> read_memory(PVOID base_address, SIZE_T size);
-	virtual void write_memory(PVOID base_address, std::vector<BYTE> data);
+	virtual std::vector<BYTE> read_memory(RemotePointer base_address, SIZE_T size);
+	virtual void write_memory(RemotePointer base_address, std::vector<BYTE> data);
 
 private:
 	AutoCloseHandle m_handle;

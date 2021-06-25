@@ -31,8 +31,8 @@ protected:
 	const DWORD m_process_id;
 	Debugger& m_debugger;
 
-	std::wstring _read_remote_string(const PVOID base_address, const bool is_unicode);
-	std::wstring _deref_read_remote_string(const PVOID base_address, const bool is_unicode);
+	std::wstring _read_remote_string(const RemotePointer base_address, const bool is_unicode);
+	std::wstring _deref_read_remote_string(const RemotePointer base_address, const bool is_unicode);
 };
 
 class ExceptionDebugEvent final :
@@ -48,7 +48,7 @@ public:
 	virtual ~ExceptionDebugEvent() = default;
 
 	DWORD get_exception_code() const { return m_exception_record.ExceptionCode; }
-	PVOID get_exception_address() const { return m_exception_record.ExceptionAddress; }
+	RemotePointer get_exception_address() const { return RemotePointer(m_exception_record.ExceptionAddress); }
 	bool is_first_chance() const { return m_first_chance; }
 	bool is_debug_break() const { return m_exception_record.ExceptionCode == EXCEPTION_BREAKPOINT; }
 
@@ -71,13 +71,13 @@ public:
 
 	HANDLE get_handle() const { return m_handle; }
 	// TODO: these need to be pointers in the remote process (So not PVOID)
-	PVOID get_local_base() const { return m_local_base; }
-	PVOID get_start_address() const { return m_start_address; }
+	RemotePointer get_local_base() const { return m_local_base; }
+	RemotePointer get_start_address() const { return m_start_address; }
 
 private:
 	const HANDLE m_handle;
-	const PVOID m_local_base;
-	const PVOID m_start_address;
+	const RemotePointer m_local_base;
+	const RemotePointer m_start_address;
 };
 
 class CreateProcessDebugEvent final :
@@ -113,9 +113,9 @@ private:
 	// TODO: Do these need to be closed?
 	const HANDLE m_process_handle;
 	const HANDLE m_thread_handle;
-	const PVOID m_image_base;
-	const PVOID m_start_address;
-	const std::pair<PVOID, bool> m_image_path_data;
+	const RemotePointer m_image_base;
+	const RemotePointer m_start_address;
+	const std::pair<RemotePointer, bool> m_image_path_data;
 	std::optional<std::wstring> m_image_path;
 };
 
@@ -165,7 +165,7 @@ public:
 	{}
 	virtual ~LoadDllDebugEvent() = default;
 
-	PVOID get_image_base() const { return m_image_base; }
+	RemotePointer get_image_base() const { return m_image_base; }
 
 	const std::wstring& get_image_path()
 	{
@@ -182,10 +182,10 @@ public:
 
 private:
 	AutoCloseHandle m_file_handle;
-	const PVOID m_image_base;
+	const RemotePointer m_image_base;
 	const DWORD m_debug_info_offset;
 	const DWORD m_debug_info_size;
-	const std::pair<PVOID, bool> m_image_path_data;
+	const std::pair<RemotePointer, bool> m_image_path_data;
 	std::optional<std::wstring> m_image_path;
 };
 
@@ -199,10 +199,10 @@ public:
 	{}
 	virtual ~UnloadDllDebugEvent() = default;
 
-	PVOID get_image_base() const { return m_image_base; }
+	RemotePointer get_image_base() const { return m_image_base; }
 
 private:
-	const PVOID m_image_base;
+	const RemotePointer m_image_base;
 };
 
 class DebugStringDebugEvent final :
@@ -225,8 +225,10 @@ public:
 		return m_string.value();
 	}
 
+	bool is_relevant() const;
+
 private:
-	const std::pair<PVOID, bool> m_string_data;
+	const std::pair<RemotePointer, bool> m_string_data;
 	// TODO: DebugStringLength is ignored, as it may also truncate my output. Add an upper cap with it to read_string
 	const WORD m_string_length;
 	std::optional<std::wstring> m_string;

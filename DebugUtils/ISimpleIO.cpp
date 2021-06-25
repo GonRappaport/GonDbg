@@ -3,6 +3,7 @@
 #include <cstdarg>
 #include <cstring>
 #include <vector>
+#include <sstream>
 
 void ISimpleIO::write_formatted(const std::wstring_view fmt, ...)
 {
@@ -24,6 +25,24 @@ std::wstring ISimpleIO::format(const std::wstring_view fmt, ...) const
     va_end(args);
 
     return formatted_output;
+}
+
+std::wstring ISimpleIO::format_bytes(const std::vector<BYTE> bytes) const
+{
+    const size_t LINE_LENGTH = 0x10;
+    std::wstringstream output;
+
+    for (size_t i = 0; i < bytes.size(); i++)
+    {
+        if ((i != 0) &&
+            ((i % LINE_LENGTH) == 0))
+        {
+            output << std::endl;
+        }
+        output << format(L"%02hhX ", bytes[i]);
+    }
+
+    return output.str();
 }
 
 std::wstring ISimpleIO::_format(const std::wstring_view& fmt, va_list args) const

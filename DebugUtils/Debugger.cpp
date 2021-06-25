@@ -101,11 +101,11 @@ DWORD Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)
 
 DWORD Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 {
-	m_io_handler->write_formatted(L"Exception raised. Thread ID: %lu, First chance: %i, Exception Code: 0x%08lX, Exception Address: 0x%p",
+	m_io_handler->write_formatted(L"Exception raised. Thread ID: %lu, First chance: %i, Exception Code: 0x%08lX, Exception Address: 0x%llX",
 		debug_event.get_thread_id(),
 		debug_event.is_first_chance(),
 		debug_event.get_exception_code(),
-		debug_event.get_exception_address());
+		static_cast<DWORD64>(debug_event.get_exception_address()));
 	if (debug_event.is_debug_break())
 	{
 		return 1;
@@ -115,9 +115,9 @@ DWORD Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 
 DWORD Debugger::dispatch_thread_creation(CreateThreadDebugEvent& debug_event)
 {
-	m_io_handler->write_formatted(L"Thread created. Thread ID: %lu, Start Address: 0x%p",
+	m_io_handler->write_formatted(L"Thread created. Thread ID: %lu, Start Address: 0x%llX",
 		debug_event.get_thread_id(),
-		debug_event.get_start_address());
+		static_cast<DWORD64>(debug_event.get_start_address()));
 	// TODO: Cache the thread handle in the threads list
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
@@ -151,29 +151,34 @@ DWORD Debugger::dispatch_process_termination(ExitProcessDebugEvent& debug_event)
 
 DWORD Debugger::dispatch_module_load(LoadDllDebugEvent& debug_event)
 {
-	m_io_handler->write_formatted(L"Module loaded. Module address: 0x%p, module name: %ws",
-		debug_event.get_image_base(),
+	m_io_handler->write_formatted(L"Module loaded. Module address: 0x%llX, module name: %ws",
+		static_cast<DWORD64>(debug_event.get_image_base()),
 		debug_event.get_image_path().c_str());
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_module_unload(UnloadDllDebugEvent& debug_event)
 {
-	m_io_handler->write_formatted(L"Module unloaded. Module address: 0x%p",
-		debug_event.get_image_base());
+	m_io_handler->write_formatted(L"Module unloaded. Module address: 0x%llX",
+		static_cast<DWORD64>(debug_event.get_image_base()));
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_debug_string(DebugStringDebugEvent& debug_event)
 {
-	m_io_handler->write_formatted(L"Debug string output: %ws", 
-		debug_event.get_debug_string().c_str());
+	if (debug_event.is_relevant())
+	{
+		m_io_handler->write_formatted(L"Debug string output: %ws",
+			debug_event.get_debug_string().c_str());
+	}
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD Debugger::dispatch_rip(RipDebugEvent& debug_event)
 {
-	m_io_handler->write_formatted(L"RIP raised");
+	m_io_handler->write_formatted(L"RIP raised. Error: 0x%08lX, type: %lu",
+		debug_event.get_error(),
+		debug_event.get_type());
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
@@ -181,9 +186,56 @@ DWORD Debugger::handle_user_command()
 {
 	auto command = m_io_handler->read();
 	
-	if (0 == wcscmp(command.c_str(), L"g"))
+	if (0 == command.find(L"g"))
 	{
 		return DBG_EXCEPTION_NOT_HANDLED;
+	}
+	else if (0 == command.find(L"db"))
+	{
+		const SIZE_T DEFAULT_READ_LENGTH = 0x40;
+		RemotePointer address;
+		SIZE_T length = DEFAULT_READ_LENGTH;
+
+		int read_values = swscanf_s(command.c_str(), L"db %Ix %Ix", &address, &length);
+		
+		switch (read_values)
+		{
+		case 1:
+			__fallthrough;
+		case 2:
+			break;
+		default:
+			m_io_handler->write(L"Invalid syntax. Usage: db <address> [L<length>]");
+			return 1;
+		}
+
+		// TODO: Add support for invalid addresses (An exception). Maybe wrap this entire function with try
+		auto data = m_debugged_process->read_memory(address, length);
+		m_io_handler->write(m_io_handler->format_bytes(data));
+	}
+	else if (0 == command.find(L"exit"))
+	{
+		throw std::exception("Exiting debugger");
+	}
+	else if (0 == command.find(L"bp"))
+	{
+
+	}
+	else if (0 == command.find(L"x"))
+	{
+		RemotePointer address;
+
+		int read_values = swscanf_s(command.c_str(), L"x %Ix", &address);
+		switch (read_values)
+		{
+		case 1:
+			break;
+		default:
+			m_io_handler->write(L"Invalid syntax. Usage: x <address>");
+			return 1;
+		}
+
+		m_symbol_finder.get_symbol(address);
 	}
 	else
 	{
@@ -225,12 +277,12 @@ PFN_WAITFORDEBUGEVENT Debugger::_cache_wait_for_debug_event()
 
 Debugger Debugger::debug_new_process(const std::wstring& exe_path, std::shared_ptr<ISimpleIO> io_handler)
 {
-	return Debugger(std::make_unique<Process>(exe_path), GetCurrentThreadId(), io_handler);
+	return Debugger(std::make_shared<Process>(exe_path), GetCurrentThreadId(), io_handler);
 }
 
 Debugger Debugger::attach_to_process(const DWORD pid, std::shared_ptr<ISimpleIO> io_handler)
 {
-	return Debugger(std::make_unique<AttachedProcess>(pid), GetCurrentThreadId(), io_handler);
+	return Debugger(std::make_shared<AttachedProcess>(pid), GetCurrentThreadId(), io_handler);
 }
 
 Debugger Debugger::attach_to_process(const std::wstring& process_name, std::shared_ptr<ISimpleIO> io_handler)

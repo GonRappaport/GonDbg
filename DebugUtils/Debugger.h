@@ -10,6 +10,7 @@
 #include "IDebuggedProcess.h"
 #include "ISimpleIO.h"
 #include "DebugEvents.h"
+#include "SymbolFinder.h"
 
 using PFN_WAITFORDEBUGEVENT = decltype(&WaitForDebugEvent);
 
@@ -26,12 +27,13 @@ class Debugger :
 	public ICtrlHandler
 {
 public:
-	Debugger(std::unique_ptr<IDebuggedProcess>&& debugged_process, const DWORD debugging_thread_id, std::shared_ptr<ISimpleIO> io_handler) :
-		m_debugged_process(std::move(debugged_process)),
+	Debugger(std::shared_ptr<IDebuggedProcess> debugged_process, const DWORD debugging_thread_id, std::shared_ptr<ISimpleIO> io_handler) :
+		m_debugged_process(debugged_process),
 		m_io_handler(io_handler),
 		m_break_handler(this),
 		m_debugger_tid(debugging_thread_id),
-		wait_for_debug_event(_cache_wait_for_debug_event())/*,
+		wait_for_debug_event(_cache_wait_for_debug_event()),
+		m_symbol_finder(debugged_process)/*,
 		m_threads(),
 		m_modules()*/
 	{};
@@ -40,11 +42,12 @@ public:
 	Debugger& operator=(const Debugger&) = delete;
 
 	Debugger(Debugger&& dbg) noexcept :
-		m_debugged_process(std::move(dbg.m_debugged_process)),
+		m_debugged_process(dbg.m_debugged_process),
 		m_io_handler(std::move(dbg.m_io_handler)),
 		m_break_handler(std::move(dbg.m_break_handler)),
 		m_debugger_tid(dbg.m_debugger_tid),
-		wait_for_debug_event(dbg.wait_for_debug_event)/*,
+		wait_for_debug_event(dbg.wait_for_debug_event),
+		m_symbol_finder(dbg.m_symbol_finder)/*,
 		m_threads(std::move(dbg.m_threads)),
 		m_modules(std::move(dbg.m_modules))*/
 	{}
@@ -62,11 +65,13 @@ public:
 private:
 	// Initial data
 	// Only the thread that initiated debugging can wait for debug events for a given process
-	std::unique_ptr<IDebuggedProcess> m_debugged_process;
+	std::shared_ptr<IDebuggedProcess> m_debugged_process;
 	std::shared_ptr<ISimpleIO> m_io_handler;
 	CtrlCHandler m_break_handler;
 	const DWORD m_debugger_tid;
 	const PFN_WAITFORDEBUGEVENT wait_for_debug_event;
+	SymbolFinder m_symbol_finder;
+	
 
 	// Runtime-gathered data
 	//std::vector<CreatedThread> m_threads;
@@ -89,7 +94,7 @@ private:
 
 	virtual bool handle_control(const DWORD ctrl_type);
 
-	std::wstring _read_remote_string(PVOID base_address, bool is_unicode);
+	std::wstring _read_remote_string(RemotePointer base_address, bool is_unicode);
 
 	friend class DebugEvent;
 };

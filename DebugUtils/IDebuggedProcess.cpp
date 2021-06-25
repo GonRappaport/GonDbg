@@ -3,21 +3,21 @@
 // Copied from wdm.h
 #define PAGE_SIZE (0x1000)
 // TODO: Convert to a good C++ function
-#define PAGE_ALIGN(Va) ((PVOID)((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
-#define PAGE_ALIGN_NEXT_PAGE(Va) ((PVOID)((ULONG_PTR)PAGE_ALIGN((Va)) + PAGE_SIZE))
+#define PAGE_ALIGN(Va) ((RemotePointer)((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
+#define PAGE_ALIGN_NEXT_PAGE(Va) ((RemotePointer)((ULONG_PTR)PAGE_ALIGN((Va)) + PAGE_SIZE))
 
-std::vector<BYTE> IDebuggedProcess::_read_page(PVOID base_address)
+std::vector<BYTE> IDebuggedProcess::_read_page(RemotePointer base_address)
 {
-	const SIZE_T bytes_to_read = PAGE_SIZE - (reinterpret_cast<SIZE_T>(base_address) & 0xFFF);
+	const SIZE_T bytes_to_read = PAGE_SIZE - (static_cast<DWORD64>(base_address) & 0xFFF);
 
 	return read_memory(base_address, bytes_to_read);
 }
 
-PVOID IDebuggedProcess::read_pointer(PVOID base_address)
+RemotePointer IDebuggedProcess::read_pointer(RemotePointer base_address)
 {
 	const uint8_t pointer_size = is_64_bit() ? 8 : 4;
 	// TODO: No support for 32bit process debugging 64bit, so we're safe
-	PVOID pointer_value;
+	RemotePointer pointer_value;
 
 	// TODO: Turn this into an assert
 	if (pointer_size > sizeof(pointer_value))
@@ -29,17 +29,17 @@ PVOID IDebuggedProcess::read_pointer(PVOID base_address)
 
 	if (is_64_bit())
 	{
-		pointer_value = reinterpret_cast<PVOID>(*(reinterpret_cast<uint64_t*>(pointer_data.data())));
+		pointer_value = static_cast<DWORD64>(*(reinterpret_cast<uint64_t*>(pointer_data.data())));
 	}
 	else
 	{
-		pointer_value = reinterpret_cast<PVOID>(*(reinterpret_cast<uint32_t*>(pointer_data.data())));
+		pointer_value = static_cast<DWORD64>(*(reinterpret_cast<uint32_t*>(pointer_data.data())));
 	}
 
 	return pointer_value;
 }
 
-std::string IDebuggedProcess::read_string(PVOID base_address)
+std::string IDebuggedProcess::read_string(RemotePointer base_address)
 {
 	std::vector<BYTE> raw_data;
 
@@ -55,7 +55,7 @@ std::string IDebuggedProcess::read_string(PVOID base_address)
 	return std::string(reinterpret_cast<char*>(raw_data.data()));
 }
 
-std::wstring IDebuggedProcess::read_wstring(PVOID base_address)
+std::wstring IDebuggedProcess::read_wstring(RemotePointer base_address)
 {
 	std::vector<BYTE> raw_data;
 
@@ -73,13 +73,13 @@ std::wstring IDebuggedProcess::read_wstring(PVOID base_address)
 	return std::wstring(reinterpret_cast<wchar_t*>(raw_data.data()));
 }
 
-std::string IDebuggedProcess::read_string_capped(PVOID base_address, SIZE_T max_length)
+std::string IDebuggedProcess::read_string_capped(RemotePointer base_address, SIZE_T max_length)
 {
 	auto raw_data = read_memory(base_address, max_length);
 	return std::string(reinterpret_cast<char*>(raw_data.data()));
 }
 
-std::wstring IDebuggedProcess::read_wstring_capped(PVOID base_address, SIZE_T max_length)
+std::wstring IDebuggedProcess::read_wstring_capped(RemotePointer base_address, SIZE_T max_length)
 {
 	auto raw_data = read_memory(base_address, max_length);
 	return std::wstring(reinterpret_cast<wchar_t*>(raw_data.data()));
