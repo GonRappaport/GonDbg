@@ -10,6 +10,7 @@
 #include "ISimpleIO.h"
 #include "DebugEvents.h"
 #include "SymbolFinder.h"
+#include "CommandsRegistration.h"
 
 using PFN_WAITFORDEBUGEVENT = decltype(&WaitForDebugEvent);
 
@@ -26,14 +27,7 @@ class Debugger :
 	public ICtrlHandler
 {
 public:
-	Debugger(std::shared_ptr<IDebuggedProcess> debugged_process, const DWORD debugging_thread_id, std::shared_ptr<ISimpleIO> io_handler) :
-		m_debugged_process(debugged_process),
-		m_io_handler(io_handler),
-		m_debugger_tid(debugging_thread_id),
-		wait_for_debug_event(_cache_wait_for_debug_event()),
-		m_symbol_finder(debugged_process)/*,
-		m_threads()*/
-	{};
+	Debugger(std::shared_ptr<IDebuggedProcess> debugged_process, const DWORD debugging_thread_id, std::shared_ptr<ISimpleIO> io_handler);
 
 	Debugger(const Debugger&) = delete;
 	Debugger& operator=(const Debugger&) = delete;
@@ -43,7 +37,8 @@ public:
 		m_io_handler(std::move(dbg.m_io_handler)),
 		m_debugger_tid(dbg.m_debugger_tid),
 		wait_for_debug_event(dbg.wait_for_debug_event),
-		m_symbol_finder(std::move(dbg.m_symbol_finder))/*,
+		m_symbol_finder(std::move(dbg.m_symbol_finder)),
+		m_commands(std::move(dbg.m_commands))/*,
 		m_threads(std::move(dbg.m_threads))*/
 	{}
 
@@ -57,6 +52,12 @@ public:
 	static Debugger attach_to_process(const std::wstring&, std::shared_ptr<ISimpleIO> io_handler);
 	static Debugger debug_new_process(const std::wstring& exe_path, std::shared_ptr<ISimpleIO> io_handler);
 
+	// TODO: This is exported so commands can use it. It's bad, get rid of it
+	const std::shared_ptr<IDebuggedProcess> get_process() { return m_debugged_process; }
+	const std::shared_ptr<ISimpleIO> get_io_handler() { return m_io_handler; }
+	const SymbolFinder& get_symbol_finder() { return m_symbol_finder; }
+	const CommandsRegistration& get_registered_commands() { return m_commands; }
+
 private:
 	// Initial data
 	// Only the thread that initiated debugging can wait for debug events for a given process
@@ -65,7 +66,7 @@ private:
 	const DWORD m_debugger_tid;
 	const PFN_WAITFORDEBUGEVENT wait_for_debug_event;
 	SymbolFinder m_symbol_finder;
-	
+	CommandsRegistration m_commands;
 
 	// Runtime-gathered data
 	//std::vector<CreatedThread> m_threads;

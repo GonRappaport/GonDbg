@@ -51,7 +51,10 @@
     <ClInclude Include="LoadedModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Command.h">
+    <ClInclude Include="CommandsRegistration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DebuggerCommands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -89,7 +92,10 @@
     <ClCompile Include="LoadedModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Command.cpp">
+    <ClCompile Include="CommandsRegistration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DebuggerCommands.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

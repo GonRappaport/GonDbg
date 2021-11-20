@@ -21,11 +21,12 @@
   <ItemGroup>
     <ClInclude Include="AttachedProcess.h" />
     <ClInclude Include="AutoCloseHandle.hpp" />
-    <ClInclude Include="Command.h" />
+    <ClInclude Include="CommandsRegistration.h" />
     <ClInclude Include="ConsoleIO.h" />
     <ClInclude Include="CreatedThread.h" />
     <ClInclude Include="DebugEvents.h" />
     <ClInclude Include="Debugger.h" />
+    <ClInclude Include="DebuggerCommands.h" />
     <ClInclude Include="IDebuggedProcess.h" />
     <ClInclude Include="ISimpleIO.h" />
     <ClInclude Include="LoadedModule.h" />
@@ -35,11 +36,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AttachedProcess.cpp" />
-    <ClCompile Include="Command.cpp" />
+    <ClCompile Include="CommandsRegistration.cpp" />
     <ClCompile Include="ConsoleIO.cpp" />
     <ClCompile Include="CreatedThread.cpp" />
     <ClCompile Include="DebugEvents.cpp" />
     <ClCompile Include="Debugger.cpp" />
+    <ClCompile Include="DebuggerCommands.cpp" />
     <ClCompile Include="IDebuggedProcess.cpp" />
     <ClCompile Include="ISimpleIO.cpp" />
     <ClCompile Include="LoadedModule.cpp" />

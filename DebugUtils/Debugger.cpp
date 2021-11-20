@@ -4,7 +4,22 @@
 #include "ProcUtils.h"
 #include "Process.h"
 #include "AttachedProcess.h"
-#include "Command.h"
+#include "DebuggerCommands.h"
+
+Debugger::Debugger(std::shared_ptr<IDebuggedProcess> debugged_process, const DWORD debugging_thread_id, std::shared_ptr<ISimpleIO> io_handler) :
+	m_debugged_process(debugged_process),
+	m_io_handler(io_handler),
+	m_debugger_tid(debugging_thread_id),
+	wait_for_debug_event(_cache_wait_for_debug_event()),
+	m_symbol_finder(debugged_process),
+	m_commands()/*,
+	m_threads()*/
+{
+	for (const auto& command : DebuggerCommands::get_commands())
+	{
+		m_commands.register_command(command.first, command.second);
+	}
+}
 
 void Debugger::debug()
 {
@@ -193,77 +208,13 @@ DWORD Debugger::dispatch_rip(RipDebugEvent& debug_event)
 
 DWORD Debugger::handle_user_command()
 {
-	Command command(m_io_handler->prompt(L"GonDBG>"));
+	std::wstring command_line = m_io_handler->prompt(L"GonDBG>");
 
-	// TODO: Commands starting with '.' are debugger settings related functions
-	// TODO: Commands starting with '!' are extension functions
-	// TODO: The plugin name before ! is optional. If it appears, it's from an explicit plugin. Otherwise, search all plugins
-	// TODO: Other commands are normal debug commands
-	
-	if (0 == command.get_command_name().find(L"g"))
-	{
-		return DBG_EXCEPTION_NOT_HANDLED;
-	}
-	else if (0 == command.get_command_name().find(L"db"))
-	{
-		const SIZE_T DEFAULT_READ_LENGTH = 0x40;
-		RemotePointer address;
-		SIZE_T length = DEFAULT_READ_LENGTH;
+	const auto command_params = CommandsRegistration::s_parse_command(command_line);
 
-		int read_values = swscanf_s(command.get_command_params().c_str(), L"%Ix %Ix", &address, &length);
-		
-		switch (read_values)
-		{
-		case 1:
-			__fallthrough;
-		case 2:
-			break;
-		default:
-			m_io_handler->write(L"Invalid syntax. Usage: db <address> [L<length>]");
-			return 1;
-		}
+	const RegisteredCommand& command_data = m_commands.get_command(command_params.first);
 
-		// TODO: Add support for invalid addresses (An exception). Maybe wrap this entire function with try
-		auto data = m_debugged_process->read_memory(address, length);
-		m_io_handler->write(m_io_handler->format_bytes(data).c_str());
-	}
-	else if (0 == command.get_command_name().find(L"exit"))
-	{
-		throw std::exception("Exiting debugger");
-	}
-	else if (0 == command.get_command_name().find(L"x"))
-	{
-		RemotePointer address;
-
-		int read_values = swscanf_s(command.get_command_params().c_str(), L"%Ix", &address);
-		switch (read_values)
-		{
-		case 1:
-			break;
-		default:
-			m_io_handler->write(L"Invalid syntax. Usage: x <address>");
-			return 1;
-		}
-
-		m_io_handler->write(m_symbol_finder.get_symbol(address));
-	}
-	else if (0 == command.get_command_name().find(L"lm"))
-	{
-		auto loaded_modules = m_symbol_finder.get_loaded_modules();
-		for (auto m : loaded_modules)
-		{
-			m_io_handler->write_formatted(L"0x%llX (0x%08lX): %s",
-				static_cast<DWORD64>(m.get_image_base()),
-				m.get_image_size(),
-				m.get_image_name().c_str());
-		}
-	}
-	else
-	{
-		m_io_handler->write(L"Unrecognized command");
-	}
-
-	return 1;
+	return command_data.m_implementation(command_params.second, *this);
 }
 
 bool Debugger::handle_control(const DWORD ctrl_type)
