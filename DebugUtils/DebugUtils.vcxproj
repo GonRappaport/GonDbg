@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="AttachedProcess.h" />
     <ClInclude Include="AutoCloseHandle.hpp" />
+    <ClInclude Include="Command.h" />
     <ClInclude Include="ConsoleIO.h" />
     <ClInclude Include="CreatedThread.h" />
     <ClInclude Include="DebugEvents.h" />
@@ -34,6 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AttachedProcess.cpp" />
+    <ClCompile Include="Command.cpp" />
     <ClCompile Include="ConsoleIO.cpp" />
     <ClCompile Include="CreatedThread.cpp" />
     <ClCompile Include="DebugEvents.cpp" />

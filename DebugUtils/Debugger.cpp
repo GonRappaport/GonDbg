@@ -4,6 +4,7 @@
 #include "ProcUtils.h"
 #include "Process.h"
 #include "AttachedProcess.h"
+#include "Command.h"
 
 void Debugger::debug()
 {
@@ -192,19 +193,24 @@ DWORD Debugger::dispatch_rip(RipDebugEvent& debug_event)
 
 DWORD Debugger::handle_user_command()
 {
-	auto command = m_io_handler->prompt(L"GonDBG>");
+	Command command(m_io_handler->prompt(L"GonDBG>"));
+
+	// TODO: Commands starting with '.' are debugger settings related functions
+	// TODO: Commands starting with '!' are extension functions
+	// TODO: The plugin name before ! is optional. If it appears, it's from an explicit plugin. Otherwise, search all plugins
+	// TODO: Other commands are normal debug commands
 	
-	if (0 == command.find(L"g"))
+	if (0 == command.get_command_name().find(L"g"))
 	{
 		return DBG_EXCEPTION_NOT_HANDLED;
 	}
-	else if (0 == command.find(L"db"))
+	else if (0 == command.get_command_name().find(L"db"))
 	{
 		const SIZE_T DEFAULT_READ_LENGTH = 0x40;
 		RemotePointer address;
 		SIZE_T length = DEFAULT_READ_LENGTH;
 
-		int read_values = swscanf_s(command.c_str(), L"db %Ix %Ix", &address, &length);
+		int read_values = swscanf_s(command.get_command_params().c_str(), L"%Ix %Ix", &address, &length);
 		
 		switch (read_values)
 		{
@@ -221,15 +227,15 @@ DWORD Debugger::handle_user_command()
 		auto data = m_debugged_process->read_memory(address, length);
 		m_io_handler->write(m_io_handler->format_bytes(data).c_str());
 	}
-	else if (0 == command.find(L"exit"))
+	else if (0 == command.get_command_name().find(L"exit"))
 	{
 		throw std::exception("Exiting debugger");
 	}
-	else if (0 == command.find(L"x"))
+	else if (0 == command.get_command_name().find(L"x"))
 	{
 		RemotePointer address;
 
-		int read_values = swscanf_s(command.c_str(), L"x %Ix", &address);
+		int read_values = swscanf_s(command.get_command_params().c_str(), L"%Ix", &address);
 		switch (read_values)
 		{
 		case 1:
@@ -241,7 +247,7 @@ DWORD Debugger::handle_user_command()
 
 		m_io_handler->write(m_symbol_finder.get_symbol(address));
 	}
-	else if (0 == command.find(L"lm"))
+	else if (0 == command.get_command_name().find(L"lm"))
 	{
 		auto loaded_modules = m_symbol_finder.get_loaded_modules();
 		for (auto m : loaded_modules)
