@@ -12,7 +12,7 @@ class CommandNotFoundException:
 
 // Forward reference
 class Debugger;
-using CommandInterface = std::function<DWORD(std::wstring, Debugger&)>;
+using CommandInterface = std::function<DWORD(const std::wstring&, Debugger&)>;
 
 class RegisteredCommand
 {

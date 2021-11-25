@@ -47,13 +47,8 @@ void Debugger::debug()
 			}
 		}
 	}
-	catch (const std::exception& e)
-	{
-		if (0 != memcmp(e.what(), "Debugged process died", sizeof("Debugged process died")))
-		{
-			throw;
-		}
-	}
+	catch (const DebuggingEnd&)
+	{}
 }
 
 DWORD Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)
@@ -167,8 +162,7 @@ DWORD Debugger::dispatch_process_termination(ExitProcessDebugEvent& debug_event)
 		debug_event.get_process_id(),
 		debug_event.get_exit_code());
 	// TODO: Make new exception type
-	throw std::exception("Debugged process died");
-	return DBG_EXCEPTION_NOT_HANDLED;
+	throw DebuggingEnd();
 }
 
 DWORD Debugger::dispatch_module_load(LoadDllDebugEvent& debug_event)

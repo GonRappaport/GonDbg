@@ -3,6 +3,10 @@
 #include <Windows.h>
 #include <exception>
 
+class DebuggingEnd :
+	public std::exception
+{};
+
 class WinAPIException :
 	public std::exception
 {

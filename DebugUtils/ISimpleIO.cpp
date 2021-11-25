@@ -31,15 +31,38 @@ std::wstring ISimpleIO::format_bytes(const std::vector<BYTE> bytes)
 {
     const size_t LINE_LENGTH = 0x10;
     std::wstringstream output;
+    std::wstringstream line_ascii;
 
     for (size_t i = 0; i < bytes.size(); i++)
     {
         if ((i != 0) &&
             ((i % LINE_LENGTH) == 0))
         {
+            output << L"| " << line_ascii.str();
+            line_ascii = std::wstringstream();
             output << std::endl;
         }
+        if (std::isprint(bytes[i]))
+        {
+            line_ascii << format(L"%c", bytes[i]);
+        }
+        else
+        {
+            line_ascii << L'.';
+        }
         output << format(L"%02hhX ", bytes[i]);
+    }
+
+    if (0 != line_ascii.tellp())
+    {
+        if (LINE_LENGTH != static_cast<size_t>(line_ascii.tellp()))
+        {
+            for (size_t i = line_ascii.tellp(); i < LINE_LENGTH; i++)
+            {
+                output << L"   ";
+            }
+        }
+        output << L"| " << line_ascii.str();
     }
 
     return output.str();

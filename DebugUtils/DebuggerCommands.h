@@ -4,12 +4,12 @@
 
 namespace DebuggerCommands
 {
-	DWORD help(std::wstring params, Debugger& debugger);
-	DWORD go(std::wstring params, Debugger& debugger);
-	DWORD list_modules(std::wstring params, Debugger& debugger);
-	DWORD read_memory(std::wstring params, Debugger& debugger);
-	DWORD quit(std::wstring params, Debugger& debugger);
-	DWORD get_symbol_name(std::wstring params, Debugger& debugger);
+	DWORD help(const std::wstring& params, Debugger& debugger);
+	DWORD go(const std::wstring& params, Debugger& debugger);
+	DWORD list_modules(const std::wstring& params, Debugger& debugger);
+	DWORD read_memory(const std::wstring& params, Debugger& debugger);
+	DWORD quit(const std::wstring& params, Debugger& debugger);
+	DWORD get_symbol_name(const std::wstring& params, Debugger& debugger);
 
 	std::vector<std::pair<std::wstring, CommandInterface>> get_commands();
 }

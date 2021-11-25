@@ -3,7 +3,7 @@
 
 // TODO: Define the enum for the magic number 1 here used to indicate run another command. Also, make it the default command ret value
 
-DWORD DebuggerCommands::help(std::wstring, Debugger& debugger)
+DWORD DebuggerCommands::help(const std::wstring&, Debugger& debugger)
 {
 	debugger.get_io_handler()->write(L"Supported commands:");
 	for (const auto& command : get_commands())
@@ -15,12 +15,12 @@ DWORD DebuggerCommands::help(std::wstring, Debugger& debugger)
 	return 1;
 }
 
-DWORD DebuggerCommands::go(std::wstring, Debugger&)
+DWORD DebuggerCommands::go(const std::wstring&, Debugger&)
 {
     return DBG_EXCEPTION_NOT_HANDLED;
 }
 
-DWORD DebuggerCommands::list_modules(std::wstring, Debugger& debugger)
+DWORD DebuggerCommands::list_modules(const std::wstring&, Debugger& debugger)
 {
 	auto loaded_modules = debugger.get_symbol_finder().get_loaded_modules();
 	for (auto m : loaded_modules)
@@ -34,7 +34,7 @@ DWORD DebuggerCommands::list_modules(std::wstring, Debugger& debugger)
 	return 1;
 }
 
-DWORD DebuggerCommands::read_memory(std::wstring params, Debugger& debugger)
+DWORD DebuggerCommands::read_memory(const std::wstring& params, Debugger& debugger)
 {
 	const SIZE_T DEFAULT_READ_LENGTH = 0x40;
 	RemotePointer address;
@@ -76,13 +76,12 @@ DWORD DebuggerCommands::read_memory(std::wstring params, Debugger& debugger)
 	return 1;
 }
 
-DWORD DebuggerCommands::quit(std::wstring, Debugger&)
+DWORD DebuggerCommands::quit(const std::wstring&, Debugger&)
 {
-	// TODO: Make new exception type
-	throw std::exception("Exiting debugger");
+	throw DebuggingEnd();
 }
 
-DWORD DebuggerCommands::get_symbol_name(std::wstring params, Debugger& debugger)
+DWORD DebuggerCommands::get_symbol_name(const std::wstring& params, Debugger& debugger)
 {
 	RemotePointer address;
 
