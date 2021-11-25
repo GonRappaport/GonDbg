@@ -1,11 +1,10 @@
 #include "DebuggerCommands.h"
+#include "Exceptions.h"
 
 // TODO: Define the enum for the magic number 1 here used to indicate run another command. Also, make it the default command ret value
 
-DWORD DebuggerCommands::help(std::wstring params, Debugger& debugger)
+DWORD DebuggerCommands::help(std::wstring, Debugger& debugger)
 {
-	UNREFERENCED_PARAMETER(params);
-
 	debugger.get_io_handler()->write(L"Supported commands:");
 	for (const auto& command : get_commands())
 	{
@@ -16,17 +15,13 @@ DWORD DebuggerCommands::help(std::wstring params, Debugger& debugger)
 	return 1;
 }
 
-DWORD DebuggerCommands::go(std::wstring params, Debugger& debugger)
+DWORD DebuggerCommands::go(std::wstring, Debugger&)
 {
-	UNREFERENCED_PARAMETER(params);
-	UNREFERENCED_PARAMETER(debugger);
     return DBG_EXCEPTION_NOT_HANDLED;
 }
 
-DWORD DebuggerCommands::list_modules(std::wstring params, Debugger& debugger)
+DWORD DebuggerCommands::list_modules(std::wstring, Debugger& debugger)
 {
-	UNREFERENCED_PARAMETER(params);
-
 	auto loaded_modules = debugger.get_symbol_finder().get_loaded_modules();
 	for (auto m : loaded_modules)
 	{
@@ -59,16 +54,31 @@ DWORD DebuggerCommands::read_memory(std::wstring params, Debugger& debugger)
 	}
 
 	// TODO: Add support for invalid addresses (An exception). Maybe wrap this entire function with try
-	auto data = debugger.get_process()->read_memory(address, length);
-	debugger.get_io_handler()->write(debugger.get_io_handler()->format_bytes(data).c_str());
+	std::vector<BYTE> data;
+	try
+	{
+		data = debugger.get_process()->read_memory(address, length);
+		debugger.get_io_handler()->write(debugger.get_io_handler()->format_bytes(data).c_str());
+	}
+	catch (const WinAPIException& e)
+	{
+		if (ERROR_PARTIAL_COPY == e.get_error())
+		{
+			// TODO: Do the same as WinDbg, and read whatever's possible (Will require to use read_page)
+			debugger.get_io_handler()->write(L"Unmapped address");
+		}
+		else
+		{
+			throw;
+		}
+	}
 
 	return 1;
 }
 
-DWORD DebuggerCommands::quit(std::wstring params, Debugger& debugger)
+DWORD DebuggerCommands::quit(std::wstring, Debugger&)
 {
-	UNREFERENCED_PARAMETER(params);
-	UNREFERENCED_PARAMETER(debugger);
+	// TODO: Make new exception type
 	throw std::exception("Exiting debugger");
 }
 

@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "Exceptions.h"
+
 bool ConsoleIO::m_registered_handler = false;
 std::list<ICtrlHandler*> ConsoleIO::m_registrations;
 
@@ -38,7 +40,7 @@ void ConsoleIO::register_break_handler(ICtrlHandler* handler)
 	{
 		if (!SetConsoleCtrlHandler(ctrl_handler, true))
 		{
-			throw std::exception("SetConsoleCtrlHandler failed");
+			throw WinAPIException("SetConsoleCtrlHandler failed");
 		}
 		ConsoleIO::m_registered_handler = true;
 	}

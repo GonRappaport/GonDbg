@@ -1,5 +1,7 @@
 #include "LoadedModule.h"
 
+#include "Exceptions.h"
+
 LoadedModule::LoadedModule(const PIMAGEHLP_MODULEW64 module_info, const HANDLE process_handle):
 	m_image_base(module_info->BaseOfImage),
 	m_image_size(module_info->ImageSize),
@@ -26,7 +28,7 @@ std::wstring LoadedModule::_s_get_pdb_path(const PIMAGEHLP_MODULEW64 module_info
 	std::vector<wchar_t> dbg_path_raw(MAX_PATH);
 	if (!SymGetSymbolFileW(process_handle, nullptr, module_info->ImageName, sfImage, pdb_path_raw.data(), pdb_path_raw.size(), dbg_path_raw.data(), dbg_path_raw.size()))
 	{
-		throw std::exception("SymGetSymbolFileW failed");
+		throw WinAPIException("SymGetSymbolFileW failed");
 	}
 	return std::wstring(pdb_path_raw.data());
 }

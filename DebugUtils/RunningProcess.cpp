@@ -1,4 +1,5 @@
 #include "RunningProcess.h"
+#include "Exceptions.h"
 
 bool RunningProcess::_s_is_64_bit(const HANDLE process_handle)
 {
@@ -15,19 +16,19 @@ bool RunningProcess::_s_is_64_bit(const HANDLE process_handle)
 	HMODULE kernel32 = GetModuleHandleA("kernel32.dll");
 	if (nullptr == kernel32)
 	{
-		throw std::exception("GetModuleHandleA failed");
+		throw WinAPIException("GetModuleHandleA failed");
 	}
 
 	auto is_wow64_process = reinterpret_cast<decltype(IsWow64Process)*>(GetProcAddress(kernel32, "IsWow64Process"));
 	if (nullptr == is_wow64_process)
 	{
 		// For 32bit systems, it's possible for this function to be missing. However, we validated that we're running under 64bit Windows.
-		throw std::exception("GetProcAddress failed");
+		throw WinAPIException("GetProcAddress failed");
 	}
 
 	if (!is_wow64_process(process_handle, &is_wow64))
 	{
-		throw std::exception("IsWow64Process failed");
+		throw WinAPIException("IsWow64Process failed");
 	}
 
 	return !is_wow64;
@@ -61,7 +62,7 @@ std::vector<BYTE> RunningProcess::read_memory(RemotePointer base_address, SIZE_T
 	if ((!ReadProcessMemory(m_handle.get_value(), base_address, data.data(), data.size(), &bytes_read)) ||
 		(bytes_read != size))
 	{
-		throw std::exception("ReadProcessMemory failed");
+		throw WinAPIException("ReadProcessMemory failed");
 	}
 
 	return data;

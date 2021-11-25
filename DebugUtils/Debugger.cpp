@@ -5,6 +5,7 @@
 #include "CreatedProcess.h"
 #include "AttachedProcess.h"
 #include "DebuggerCommands.h"
+#include "Exceptions.h"
 
 Debugger::Debugger(std::shared_ptr<IDebuggedProcess> debugged_process, const DWORD debugging_thread_id, std::shared_ptr<ISimpleIO> io_handler) :
 	m_debugged_process(debugged_process),
@@ -32,7 +33,7 @@ void Debugger::debug()
 		{
 			if (!wait_for_debug_event(&debug_event, INFINITE))
 			{
-				throw std::exception("WaitForDebugEvent(Ex) failed"); // TODO: Add GetLastError everywhere
+				throw WinAPIException("WaitForDebugEvent(Ex) failed"); // TODO: Add GetLastError everywhere
 			}
 			DWORD continue_status = dispatch_debug_event(debug_event);
 			while (continue_status == 1) // TODO: Define enum
@@ -42,7 +43,7 @@ void Debugger::debug()
 			// TODO: For time travel debugging, hook this function with one that does nothing (I think) to simply "debug" the trace. You'll also hook the wait function
 			if (!ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, continue_status))
 			{
-				throw std::exception("ContinueDebugEvent failed");
+				throw WinAPIException("ContinueDebugEvent failed");
 			}
 		}
 	}
@@ -165,6 +166,7 @@ DWORD Debugger::dispatch_process_termination(ExitProcessDebugEvent& debug_event)
 	m_io_handler->write_formatted(L"Process died. Process ID: %lu, exit code: %lu",
 		debug_event.get_process_id(),
 		debug_event.get_exit_code());
+	// TODO: Make new exception type
 	throw std::exception("Debugged process died");
 	return DBG_EXCEPTION_NOT_HANDLED;
 }

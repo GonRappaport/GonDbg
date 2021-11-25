@@ -27,6 +27,7 @@
     <ClInclude Include="DebugEvents.h" />
     <ClInclude Include="Debugger.h" />
     <ClInclude Include="DebuggerCommands.h" />
+    <ClInclude Include="Exceptions.h" />
     <ClInclude Include="IDebuggedProcess.h" />
     <ClInclude Include="RunningProcess.h" />
     <ClInclude Include="ISimpleIO.h" />

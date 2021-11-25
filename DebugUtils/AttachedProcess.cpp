@@ -1,5 +1,7 @@
 #include "AttachedProcess.h"
 
+#include "Exceptions.h"
+
 AutoCloseHandle AttachedProcess::_s_attach_process(const DWORD process_id)
 {
 	// TODO: I request more rights here than are requested by DebugActiveProcess. Maybe minimize it? Or allow it to not be used?
@@ -7,7 +9,7 @@ AutoCloseHandle AttachedProcess::_s_attach_process(const DWORD process_id)
 
 	if (!DebugActiveProcess(process_id))
 	{
-		throw std::exception("DebugActiveProcess failed");
+		throw WinAPIException("DebugActiveProcess failed");
 	}
 
 	// TODO: Is that necessary?

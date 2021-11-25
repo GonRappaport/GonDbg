@@ -1,5 +1,7 @@
 #include "CreatedProcess.h"
 
+#include "Exceptions.h"
+
 AutoCloseHandle CreatedProcess::_s_create_process(const std::wstring& exe_path, std::wstring command_line)
 {
 	STARTUPINFOW startup_info = { 0 };
@@ -18,7 +20,7 @@ AutoCloseHandle CreatedProcess::_s_create_process(const std::wstring& exe_path, 
 		&startup_info,
 		&process_info))
 	{
-		throw std::exception("Process creation failed");
+		throw WinAPIException("CreateProcessW failed");
 	}
 
 	CloseHandle(process_info.hThread);
