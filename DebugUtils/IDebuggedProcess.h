@@ -64,7 +64,7 @@ public:
 	virtual DWORD get_process_id() const = 0;
 	virtual bool is_64_bit() const = 0;
 	// No need to use PVOID64 and such as it's impossible to debug 64-bit processes from a 32-bit debugger
-	// TODO: Consider switching from PVOID to not accidently access this as a pointer in the local process
+	// TODO: Or is it? ;)
 	virtual std::vector<BYTE> read_memory(RemotePointer base_address, SIZE_T size) = 0;
 	virtual void write_memory(RemotePointer base_address, std::vector<BYTE> data) = 0;
 	// TODO: That requires you to keep data of if the process is 32 or 64 bit

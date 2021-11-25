@@ -28,9 +28,10 @@
     <ClInclude Include="Debugger.h" />
     <ClInclude Include="DebuggerCommands.h" />
     <ClInclude Include="IDebuggedProcess.h" />
+    <ClInclude Include="RunningProcess.h" />
     <ClInclude Include="ISimpleIO.h" />
     <ClInclude Include="LoadedModule.h" />
-    <ClInclude Include="Process.h" />
+    <ClInclude Include="CreatedProcess.h" />
     <ClInclude Include="ProcUtils.h" />
     <ClInclude Include="SymbolFinder.h" />
   </ItemGroup>
@@ -43,9 +44,10 @@
     <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="DebuggerCommands.cpp" />
     <ClCompile Include="IDebuggedProcess.cpp" />
+    <ClCompile Include="RunningProcess.cpp" />
     <ClCompile Include="ISimpleIO.cpp" />
     <ClCompile Include="LoadedModule.cpp" />
-    <ClCompile Include="Process.cpp" />
+    <ClCompile Include="CreatedProcess.cpp" />
     <ClCompile Include="ProcUtils.cpp" />
     <ClCompile Include="SymbolFinder.cpp" />
   </ItemGroup>

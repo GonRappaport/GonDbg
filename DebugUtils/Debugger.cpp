@@ -2,7 +2,7 @@
 
 #include "Debugger.h"
 #include "ProcUtils.h"
-#include "Process.h"
+#include "CreatedProcess.h"
 #include "AttachedProcess.h"
 #include "DebuggerCommands.h"
 
@@ -212,9 +212,16 @@ DWORD Debugger::handle_user_command()
 
 	const auto command_params = CommandsRegistration::s_parse_command(command_line);
 
-	const RegisteredCommand& command_data = m_commands.get_command(command_params.first);
-
-	return command_data.m_implementation(command_params.second, *this);
+	try
+	{
+		const RegisteredCommand& command_data = m_commands.get_command(command_params.first);
+		return command_data.m_implementation(command_params.second, *this);
+	}
+	catch (const CommandNotFoundException&)
+	{
+		m_io_handler->write(L"Unknown command");
+		return 1;
+	}
 }
 
 bool Debugger::handle_control(const DWORD ctrl_type)
@@ -249,7 +256,7 @@ PFN_WAITFORDEBUGEVENT Debugger::_cache_wait_for_debug_event()
 
 Debugger Debugger::debug_new_process(const std::wstring& exe_path, std::shared_ptr<ISimpleIO> io_handler)
 {
-	return Debugger(std::make_shared<Process>(exe_path), GetCurrentThreadId(), io_handler);
+	return Debugger(std::make_shared<CreatedProcess>(exe_path), GetCurrentThreadId(), io_handler);
 }
 
 Debugger Debugger::attach_to_process(const DWORD pid, std::shared_ptr<ISimpleIO> io_handler)

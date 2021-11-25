@@ -4,6 +4,11 @@
 #include <string>
 #include <functional>
 #include <optional>
+#include <exception>
+
+class CommandNotFoundException:
+	public std::exception
+{};
 
 // Forward reference
 class Debugger;

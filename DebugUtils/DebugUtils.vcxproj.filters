@@ -27,9 +27,6 @@
     <ClInclude Include="CreatedThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Process.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="IDebuggedProcess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -57,6 +54,12 @@
     <ClInclude Include="DebuggerCommands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CreatedProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RunningProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Debugger.cpp">
@@ -66,9 +69,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CreatedThread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Process.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ConsoleIO.cpp">
@@ -96,6 +96,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DebuggerCommands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CreatedProcess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RunningProcess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

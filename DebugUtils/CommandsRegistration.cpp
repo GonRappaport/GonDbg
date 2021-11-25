@@ -36,7 +36,15 @@ const RegisteredCommand& CommandsRegistration::get_command(const std::wstring co
 			}
 		}
 	}
-	return m_registered_commands.at(command_name);
+
+	try
+	{
+		return m_registered_commands.at(command_name);
+	}
+	catch (const std::out_of_range&)
+	{
+		throw CommandNotFoundException();
+	}
 }
 
 void CommandsRegistration::register_command(const std::wstring command_name, const CommandInterface command_impl)
