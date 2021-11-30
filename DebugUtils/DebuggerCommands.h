@@ -10,6 +10,7 @@ namespace DebuggerCommands
 	DWORD read_memory(const std::wstring& params, Debugger& debugger);
 	DWORD quit(const std::wstring& params, Debugger& debugger);
 	DWORD get_symbol_name(const std::wstring& params, Debugger& debugger);
+	DWORD step(const std::wstring& params, Debugger& debugger);
 
 	std::vector<std::pair<std::wstring, CommandInterface>> get_commands();
 }

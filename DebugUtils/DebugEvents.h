@@ -10,7 +10,7 @@ class Debugger;
 class DebugEvent
 {
 public:
-	// TODO: Instead of keeping Debugger, keep IDebuggedProcess. It both solves your circular dependency (Maybe, see that you include headers correctly) and makes more sense
+	// TODO: Instead of keeping Debugger, keep IDebuggedProcessPtr. It both solves your circular dependency (Maybe, see that you include headers correctly. As of now, seems right) and makes more sense
 	// TODO: It will also be better since once you support multiple processes, you could relate each debug event to a specific process in Debugger, instead of doing that here
 	DebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
 		m_thread_id(debug_event.dwThreadId),
@@ -51,6 +51,7 @@ public:
 	RemotePointer get_exception_address() const { return RemotePointer(m_exception_record.ExceptionAddress); }
 	bool is_first_chance() const { return m_first_chance; }
 	bool is_debug_break() const { return m_exception_record.ExceptionCode == EXCEPTION_BREAKPOINT; }
+	bool is_single_step() const { return m_exception_record.ExceptionCode == EXCEPTION_SINGLE_STEP; }
 
 private:
 	const EXCEPTION_RECORD m_exception_record;
@@ -70,7 +71,6 @@ public:
 	virtual ~CreateThreadDebugEvent() = default;
 
 	HANDLE get_handle() const { return m_handle; }
-	// TODO: these need to be pointers in the remote process (So not PVOID)
 	RemotePointer get_local_base() const { return m_local_base; }
 	RemotePointer get_start_address() const { return m_start_address; }
 

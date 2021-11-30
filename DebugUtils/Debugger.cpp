@@ -131,7 +131,7 @@ DWORD Debugger::dispatch_thread_creation(CreateThreadDebugEvent& debug_event)
 	m_io_handler->write_formatted(L"Thread created. Thread ID: %lu, Start Address: 0x%llX",
 		debug_event.get_thread_id(),
 		static_cast<DWORD64>(debug_event.get_start_address()));
-	// TODO: Cache the thread handle in the threads list
+	m_threads.emplace_back(debug_event);
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
 

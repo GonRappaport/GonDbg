@@ -100,6 +100,16 @@ DWORD DebuggerCommands::get_symbol_name(const std::wstring& params, Debugger& de
 	return 1;
 }
 
+DWORD DebuggerCommands::step(const std::wstring& params, Debugger& debugger)
+{
+	// TODO: Export an API to register to specific debug events (In this case, register_exception_event_handler)
+	// The API will receive a callback that returns a bool. If true, the callback is kept inside the vector. Otherwise, it is removed.
+	// TODO: Idea:
+	// 1. Iterate over all process threads and set trace flag for all of them. (TODO: That requires implementing the thread maintaing)
+	// 2. Register exception callback that sets off trace flags for all threads, then returns false. Note: Even if it's a different exception, we don't care
+	return 1;
+}
+
 std::vector<std::pair<std::wstring, CommandInterface>> DebuggerCommands::get_commands()
 {
 	return {

@@ -13,6 +13,7 @@ public:
 		m_closer(closing_function)
 	{}
 
+	// TODO: Consider making that ref-counting to allow for copy constructions. But maybe a different class so it won't be implicit
 	AutoCloseHandleImpl(const AutoCloseHandleImpl&) = delete;
 	AutoCloseHandleImpl& operator=(const AutoCloseHandleImpl&) = delete;
 

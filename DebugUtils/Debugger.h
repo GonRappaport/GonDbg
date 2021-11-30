@@ -11,6 +11,7 @@
 #include "DebugEvents.h"
 #include "SymbolFinder.h"
 #include "CommandsRegistration.h"
+#include "CreatedThread.h"
 
 using PFN_WAITFORDEBUGEVENT = decltype(&WaitForDebugEvent);
 
@@ -38,8 +39,8 @@ public:
 		m_debugger_tid(dbg.m_debugger_tid),
 		wait_for_debug_event(dbg.wait_for_debug_event),
 		m_symbol_finder(std::move(dbg.m_symbol_finder)),
-		m_commands(std::move(dbg.m_commands))/*,
-		m_threads(std::move(dbg.m_threads))*/
+		m_commands(std::move(dbg.m_commands)),
+		m_threads(std::move(dbg.m_threads))
 	{}
 
 	virtual ~Debugger() = default;
@@ -69,7 +70,7 @@ private:
 	CommandsRegistration m_commands;
 
 	// Runtime-gathered data
-	//std::vector<CreatedThread> m_threads;
+	std::list<CreatedThread> m_threads;
 
 	static PFN_WAITFORDEBUGEVENT _cache_wait_for_debug_event();
 
