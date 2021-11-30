@@ -28,4 +28,5 @@ private:
 	SYM_TYPE m_symbols_type;
 
 	static std::wstring _s_get_pdb_path(const PIMAGEHLP_MODULEW64 module_info, const HANDLE process_handle);
+	static std::wstring _s_resolve_module_name(const PIMAGEHLP_MODULEW64 module_info, const HANDLE process_handle);
 };

@@ -6,6 +6,7 @@
 #include "ArgumentParser.h"
 #include "Debugger.h"
 #include "ConsoleIO.h"
+#include "Exceptions.h"
 
 static
 INT
@@ -65,16 +66,21 @@ SafeMain(
 
 		return 0;
 	}
+	catch (const WinAPIException& e)
+	{
+		std::wcout << e.what() << L". LE: " << e.get_error() << std::endl;
+		return -1;
+	}
 	catch (const std::exception& e)
 	{
-		std::wcout << e.what();
-		return -1;
+		std::wcout << e.what() << std::endl;
+		return -2;
 	}
 	catch (...)
 	{
 		// TODO: You got this when passing gondbg.exe attach 1
 		std::wcout << L"Unknwon exception";
-		return -2;
+		return -3;
 	}
 }
 

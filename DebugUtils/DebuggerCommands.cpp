@@ -22,7 +22,7 @@ DWORD DebuggerCommands::go(const std::wstring&, Debugger&)
 
 DWORD DebuggerCommands::list_modules(const std::wstring&, Debugger& debugger)
 {
-	auto loaded_modules = debugger.get_symbol_finder().get_loaded_modules();
+	const auto& loaded_modules = debugger.get_symbol_finder().get_loaded_modules();
 	for (const auto& m : loaded_modules)
 	{
 		debugger.get_io_handler()->write_formatted(L"0x%llX (0x%08lX): %s",
