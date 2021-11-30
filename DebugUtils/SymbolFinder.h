@@ -32,7 +32,7 @@ public:
 	void load_module(HANDLE file_handle, const std::wstring& image_name, const RemotePointer image_base);
 	void unload_module(const RemotePointer image_base);
 
-	const std::list<LoadedModule> get_loaded_modules() const { return m_modules; }
+	const std::list<LoadedModule>& get_loaded_modules() const { return m_modules; }
 
 private:
 	std::shared_ptr<IDebuggedProcess> m_process;

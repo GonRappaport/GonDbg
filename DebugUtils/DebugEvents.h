@@ -3,19 +3,20 @@
 #include <Windows.h>
 #include <string>
 #include <optional>
+#include <memory>
 
-#include "Debugger.h"
+#include "IDebuggedProcess.h"
+#include "AutoCloseHandle.hpp"
 
-class Debugger;
 class DebugEvent
 {
 public:
 	// TODO: Instead of keeping Debugger, keep IDebuggedProcessPtr. It both solves your circular dependency (Maybe, see that you include headers correctly. As of now, seems right) and makes more sense
 	// TODO: It will also be better since once you support multiple processes, you could relate each debug event to a specific process in Debugger, instead of doing that here
-	DebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
+	DebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process) :
 		m_thread_id(debug_event.dwThreadId),
 		m_process_id(debug_event.dwProcessId),
-		m_debugger(debugger)
+		m_process(process)
 	{}
 	virtual ~DebugEvent() = default;
 	DebugEvent(const DebugEvent&) = delete;
@@ -25,11 +26,12 @@ public:
 
 	DWORD get_thread_id() const { return m_thread_id; }
 	DWORD get_process_id() const { return m_process_id; }
+	std::shared_ptr <IDebuggedProcess> get_process() const { return m_process; }
 
 protected:
 	const DWORD m_thread_id;
 	const DWORD m_process_id;
-	Debugger& m_debugger;
+	std::shared_ptr<IDebuggedProcess> m_process;
 
 	std::wstring _read_remote_string(const RemotePointer base_address, const bool is_unicode);
 	std::wstring _deref_read_remote_string(const RemotePointer base_address, const bool is_unicode);
@@ -39,8 +41,8 @@ class ExceptionDebugEvent final :
 	public DebugEvent
 {
 public:
-	ExceptionDebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger):
-		DebugEvent(debug_event, debugger),
+	ExceptionDebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process):
+		DebugEvent(debug_event, process),
 		// TODO: Check if it's EXCEPTION_RECORD32 or 64
 		m_exception_record(debug_event.u.Exception.ExceptionRecord),
 		m_first_chance(debug_event.u.Exception.dwFirstChance)
@@ -62,8 +64,8 @@ class CreateThreadDebugEvent final :
 	public DebugEvent
 {
 public:
-	CreateThreadDebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
-		DebugEvent(debug_event, debugger),
+	CreateThreadDebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process) :
+		DebugEvent(debug_event, process),
 		m_handle(debug_event.u.CreateThread.hThread),
 		m_local_base(debug_event.u.CreateThread.lpThreadLocalBase),
 		m_start_address(debug_event.u.CreateThread.lpStartAddress)
@@ -84,8 +86,8 @@ class CreateProcessDebugEvent final :
 	public DebugEvent
 {
 public:
-	CreateProcessDebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
-		DebugEvent(debug_event, debugger),
+	CreateProcessDebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process) :
+		DebugEvent(debug_event, process),
 		m_file_handle(debug_event.u.CreateProcessInfo.hFile),
 		m_process_handle(debug_event.u.CreateProcessInfo.hProcess),
 		m_thread_handle(debug_event.u.CreateProcessInfo.hThread),
@@ -125,8 +127,8 @@ class ExitThreadDebugEvent final :
 	public DebugEvent
 {
 public:
-	ExitThreadDebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
-		DebugEvent(debug_event, debugger),
+	ExitThreadDebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process) :
+		DebugEvent(debug_event, process),
 		m_exit_code(debug_event.u.ExitThread.dwExitCode)
 	{}
 	virtual ~ExitThreadDebugEvent() = default;
@@ -141,8 +143,8 @@ class ExitProcessDebugEvent final :
 	public DebugEvent
 {
 public:
-	ExitProcessDebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
-		DebugEvent(debug_event, debugger),
+	ExitProcessDebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process) :
+		DebugEvent(debug_event, process),
 		m_exit_code(debug_event.u.ExitProcess.dwExitCode)
 	{}
 	virtual ~ExitProcessDebugEvent() = default;
@@ -157,8 +159,8 @@ class LoadDllDebugEvent final :
 	public DebugEvent
 {
 public:
-	LoadDllDebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
-		DebugEvent(debug_event, debugger),
+	LoadDllDebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process) :
+		DebugEvent(debug_event, process),
 		m_file_handle(debug_event.u.LoadDll.hFile),
 		m_image_base(debug_event.u.LoadDll.lpBaseOfDll),
 		m_debug_info_offset(debug_event.u.LoadDll.dwDebugInfoFileOffset),
@@ -195,8 +197,8 @@ class UnloadDllDebugEvent final :
 	public DebugEvent
 {
 public:
-	UnloadDllDebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
-		DebugEvent(debug_event, debugger),
+	UnloadDllDebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process) :
+		DebugEvent(debug_event, process),
 		m_image_base(debug_event.u.UnloadDll.lpBaseOfDll)
 	{}
 	virtual ~UnloadDllDebugEvent() = default;
@@ -211,8 +213,8 @@ class DebugStringDebugEvent final :
 	public DebugEvent
 {
 public:
-	DebugStringDebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
-		DebugEvent(debug_event, debugger),
+	DebugStringDebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process) :
+		DebugEvent(debug_event, process),
 		m_string_data(std::make_pair(debug_event.u.DebugString.lpDebugStringData, debug_event.u.DebugString.fUnicode)),
 		m_string_length(debug_event.u.DebugString.nDebugStringLength)
 	{}
@@ -240,8 +242,8 @@ class RipDebugEvent final :
 	public DebugEvent
 {
 public:
-	RipDebugEvent(const DEBUG_EVENT& debug_event, Debugger& debugger) :
-		DebugEvent(debug_event, debugger),
+	RipDebugEvent(const DEBUG_EVENT& debug_event, std::shared_ptr<IDebuggedProcess> process) :
+		DebugEvent(debug_event, process),
 		m_error(debug_event.u.RipInfo.dwError),
 		m_type(debug_event.u.RipInfo.dwType)
 	{}

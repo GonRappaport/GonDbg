@@ -64,47 +64,47 @@ DWORD Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)
 	{
 	case EXCEPTION_DEBUG_EVENT:
 	{
-		ExceptionDebugEvent event_data(debug_event, *this);
+		ExceptionDebugEvent event_data(debug_event, m_debugged_process);
 		return dispatch_exception(event_data);
 	}
 	case CREATE_THREAD_DEBUG_EVENT:
 	{
-		CreateThreadDebugEvent event_data(debug_event, *this);
+		CreateThreadDebugEvent event_data(debug_event, m_debugged_process);
 		return dispatch_thread_creation(event_data);
 	}
 	case CREATE_PROCESS_DEBUG_EVENT:
 	{
-		CreateProcessDebugEvent event_data(debug_event, *this);
+		CreateProcessDebugEvent event_data(debug_event, m_debugged_process);
 		return dispatch_process_creation(event_data);
 	}
 	case EXIT_THREAD_DEBUG_EVENT:
 	{
-		ExitThreadDebugEvent event_data(debug_event, *this);
+		ExitThreadDebugEvent event_data(debug_event, m_debugged_process);
 		return dispatch_thread_termination(event_data);
 	}
 	case EXIT_PROCESS_DEBUG_EVENT:
 	{
-		ExitProcessDebugEvent event_data(debug_event, *this);
+		ExitProcessDebugEvent event_data(debug_event, m_debugged_process);
 		return dispatch_process_termination(event_data);
 	}
 	case LOAD_DLL_DEBUG_EVENT:
 	{
-		LoadDllDebugEvent event_data(debug_event, *this);
+		LoadDllDebugEvent event_data(debug_event, m_debugged_process);
 		return dispatch_module_load(event_data);
 	}
 	case UNLOAD_DLL_DEBUG_EVENT:
 	{
-		UnloadDllDebugEvent event_data(debug_event, *this);
+		UnloadDllDebugEvent event_data(debug_event, m_debugged_process);
 		return dispatch_module_unload(event_data);
 	}
 	case OUTPUT_DEBUG_STRING_EVENT:
 	{
-		DebugStringDebugEvent event_data(debug_event, *this);
+		DebugStringDebugEvent event_data(debug_event, m_debugged_process);
 		return dispatch_debug_string(event_data);
 	}
 	case RIP_EVENT:
 	{
-		RipDebugEvent event_data(debug_event, *this);
+		RipDebugEvent event_data(debug_event, m_debugged_process);
 		return dispatch_rip(event_data);
 	}
 	default:

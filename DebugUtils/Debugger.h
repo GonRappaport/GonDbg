@@ -15,15 +15,6 @@
 
 using PFN_WAITFORDEBUGEVENT = decltype(&WaitForDebugEvent);
 
-class ExceptionDebugEvent;
-class CreateThreadDebugEvent;
-class CreateProcessDebugEvent;
-class ExitThreadDebugEvent;
-class ExitProcessDebugEvent;
-class LoadDllDebugEvent;
-class UnloadDllDebugEvent;
-class DebugStringDebugEvent;
-class RipDebugEvent;
 class Debugger :
 	public ICtrlHandler
 {
@@ -90,6 +81,4 @@ private:
 	virtual bool handle_control(const DWORD ctrl_type);
 
 	std::wstring _read_remote_string(RemotePointer base_address, bool is_unicode);
-
-	friend class DebugEvent;
 };
