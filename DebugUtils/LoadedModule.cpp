@@ -8,8 +8,6 @@ LoadedModule::LoadedModule(const PIMAGEHLP_MODULEW64 module_info, const HANDLE p
 	m_image_base(module_info->BaseOfImage),
 	m_image_size(module_info->ImageSize),
 	m_symbols_type(module_info->SymType),
-	// TODO: Hack as ntdll doesn't hold a name
-	//m_image_name((module_info->ModuleName[0] == UNICODE_NULL)? (L"NTDLL") : ((module_info->ModuleName))),
 	m_image_name(_s_resolve_module_name(module_info, process_handle)),
 	m_image_path(module_info->ImageName)/*,
 	m_pdb_name(_s_get_pdb_path(module_info, process_handle))*/

@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <exception>
 
+// TODO: Document here which module throws which exception, and/or document in each module+function what exception it throws
+
 class DebuggingEnd :
 	public std::exception
 {};

@@ -47,6 +47,7 @@ std::string IDebuggedProcess::read_string(RemotePointer base_address)
 	{
 		auto new_data = _read_page(base_address);
 		// Just to improve performance
+		// TODO: Switch to using some adaptation over iostream or std::string with append/push_back
 		raw_data.reserve(raw_data.size() + std::distance(new_data.begin(), new_data.end()));
 		raw_data.insert(raw_data.end(), new_data.begin(), new_data.end());
 		base_address = PAGE_ALIGN_NEXT_PAGE(base_address);

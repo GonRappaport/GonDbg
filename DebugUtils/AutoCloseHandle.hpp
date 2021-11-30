@@ -4,16 +4,31 @@
 #include <exception>
 #include <functional>
 
-template <HANDLE invalid_value>
+// TODO: Maybe add the closer function to the template instead of the constructor
+template <typename closeable_type, closeable_type invalid_value>
 class AutoCloseHandleImpl
 {
 public:
-	explicit AutoCloseHandleImpl(const HANDLE handle, std::function<void(HANDLE)> closing_function=CloseHandle) :
+	AutoCloseHandleImpl(const closeable_type handle, std::function<void(closeable_type)> closing_function) :
 		m_handle(_validate_handle(handle)),
 		m_closer(closing_function)
 	{}
 
+	// TODO: I don't think it really specializes, it's just weird and wrong probably. Probably added bugs here
+	// Specilization for HANDLE
+	explicit AutoCloseHandleImpl(const HANDLE handle):
+		m_handle(_validate_handle(handle)),
+		m_closer(CloseHandle)
+	{}
+
+	// Specilization for HMODULE
+	explicit AutoCloseHandleImpl(const HMODULE handle) :
+		m_handle(_validate_handle(handle)),
+		m_closer(FreeLibrary)
+	{}
+
 	// TODO: Consider making that ref-counting to allow for copy constructions. But maybe a different class so it won't be implicit
+	// TODO: Since that doesn't work only with HANDLE now, maybe overide this function for HANDLE specifically and use refcounting.
 	AutoCloseHandleImpl(const AutoCloseHandleImpl&) = delete;
 	AutoCloseHandleImpl& operator=(const AutoCloseHandleImpl&) = delete;
 
@@ -38,10 +53,10 @@ public:
 		}
 	}
 
-	HANDLE get_value() const { return m_handle; }
+	closeable_type get_value() const { return m_handle; }
 
 private:
-	HANDLE _validate_handle(const HANDLE handle)
+	closeable_type _validate_handle(const closeable_type handle)
 	{
 		if (handle == invalid_value)
 		{
@@ -49,9 +64,10 @@ private:
 		}
 		return handle;
 	}
-	HANDLE m_handle;
-	const std::function<void(HANDLE)> m_closer;
+	closeable_type m_handle;
+	const std::function<void(closeable_type)> m_closer;
 };
 
-using AutoCloseHandle = AutoCloseHandleImpl<nullptr>;
-using AutoCloseFileHandle = AutoCloseHandleImpl<INVALID_HANDLE_VALUE>;
+using AutoCloseHandle = AutoCloseHandleImpl<HANDLE, nullptr>;
+using AutoCloseFileHandle = AutoCloseHandleImpl<HANDLE, INVALID_HANDLE_VALUE>;
+using AutoFreeLibrary = AutoCloseHandleImpl<HMODULE, nullptr>;

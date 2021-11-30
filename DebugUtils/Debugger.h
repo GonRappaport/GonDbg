@@ -44,7 +44,6 @@ public:
 	static Debugger attach_to_process(const std::wstring&, std::shared_ptr<ISimpleIO> io_handler);
 	static Debugger debug_new_process(const std::wstring& exe_path, std::shared_ptr<ISimpleIO> io_handler);
 
-	// TODO: This is exported so commands can use it. It's bad, get rid of it
 	const std::shared_ptr<IDebuggedProcess> get_process() { return m_debugged_process; }
 	const std::shared_ptr<ISimpleIO> get_io_handler() { return m_io_handler; }
 	const SymbolFinder& get_symbol_finder() { return m_symbol_finder; }

@@ -29,6 +29,8 @@
     <ClInclude Include="DebuggerCommands.h" />
     <ClInclude Include="Exceptions.h" />
     <ClInclude Include="IDebuggedProcess.h" />
+    <ClInclude Include="LoadedLibrary.h" />
+    <ClInclude Include="PluginsRegistration.h" />
     <ClInclude Include="RunningProcess.h" />
     <ClInclude Include="ISimpleIO.h" />
     <ClInclude Include="LoadedModule.h" />
@@ -45,6 +47,8 @@
     <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="DebuggerCommands.cpp" />
     <ClCompile Include="IDebuggedProcess.cpp" />
+    <ClCompile Include="LoadedLibrary.cpp" />
+    <ClCompile Include="PluginsRegistration.cpp" />
     <ClCompile Include="RunningProcess.cpp" />
     <ClCompile Include="ISimpleIO.cpp" />
     <ClCompile Include="LoadedModule.cpp" />

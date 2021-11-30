@@ -1,4 +1,16 @@
+Ideas in no particular order:
 Non-invasive attach to process
 Installer
 Time travel debugging
 RPC Interface for starting sessions (Provides process list, attach, create and maybe some other "main.c" stuff)
+Plugins
+Integration with python27.dll and creation of a wrapper for the debugger API for use with python in the command
+line or scripts (Will be implemented in a plugin) (Think about support for python3)
+Make PDBs work
+
+Roadmap for version 1.0:
+Python
+PDB loading
+Plugins
+Code beautification
+Solution and files reorganization
