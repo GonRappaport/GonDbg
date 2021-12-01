@@ -16,6 +16,16 @@
 
 using PFN_WAITFORDEBUGEVENT = decltype(&WaitForDebugEvent);
 
+class ICallbackContext
+{
+public:
+	ICallbackContext() = default;
+	virtual ~ICallbackContext() = default;
+};
+// Returns true if it wishes to stay in the list, false to be removed.
+using ExceptionCallback = std::function<bool(const ExceptionDebugEvent&, std::shared_ptr<ICallbackContext>)>;
+using ThreadCreationCallback = std::function<bool(const CreateThreadDebugEvent&, std::shared_ptr<ICallbackContext>)>;
+
 class Debugger :
 	public ICtrlHandler
 {
@@ -32,7 +42,10 @@ public:
 		wait_for_debug_event(dbg.wait_for_debug_event),
 		m_symbol_finder(std::move(dbg.m_symbol_finder)),
 		m_commands(std::move(dbg.m_commands)),
-		m_threads(std::move(dbg.m_threads))
+		m_threads(std::move(dbg.m_threads)),
+		m_exception_callbacks(std::move(dbg.m_exception_callbacks)),
+		m_thread_creation_callbacks(std::move(dbg.m_thread_creation_callbacks)),
+		m_current_thread_id(std::exchange(dbg.m_current_thread_id, 0))
 	{}
 
 	virtual ~Debugger() = default;
@@ -49,7 +62,11 @@ public:
 	const std::shared_ptr<ISimpleIO> get_io_handler() const { return m_io_handler; }
 	const SymbolFinder& get_symbol_finder() const { return m_symbol_finder; }
 	const CommandsRegistration& get_registered_commands() const { return m_commands; }
-	const std::list<CreatedThread>& get_threads() const { return m_threads; }
+	std::list<CreatedThread>& get_threads() { return m_threads; } // Not returning const as commands may alter thread status
+	DWORD get_current_thread_id() const { return m_current_thread_id; }
+
+	void register_exception_callback(ExceptionCallback callback, std::shared_ptr<ICallbackContext> context) { m_exception_callbacks.emplace_back(std::make_pair(callback, context)); }
+	void register_thread_creation_callback(ThreadCreationCallback callback, std::shared_ptr<ICallbackContext> context) { m_thread_creation_callbacks.emplace_back(std::make_pair(callback, context)); }
 
 private:
 	// Initial data
@@ -63,6 +80,9 @@ private:
 
 	// Runtime-gathered data
 	std::list<CreatedThread> m_threads;
+	std::list<std::pair<ExceptionCallback, std::shared_ptr<ICallbackContext>>> m_exception_callbacks;
+	std::list<std::pair<ThreadCreationCallback, std::shared_ptr<ICallbackContext>>> m_thread_creation_callbacks;
+	DWORD m_current_thread_id;
 
 	static PFN_WAITFORDEBUGEVENT _cache_wait_for_debug_event();
 

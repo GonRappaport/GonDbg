@@ -112,6 +112,7 @@ public:
 	AutoCloseHandle detach_file_handle() { return std::move(m_file_handle); }
 
 	const RemotePointer get_image_base() const { return m_image_base; }
+	HANDLE get_thread_handle() const { return m_thread_handle; }
 
 private:
 	AutoCloseHandle m_file_handle;

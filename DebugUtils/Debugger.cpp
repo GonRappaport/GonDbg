@@ -13,8 +13,11 @@ Debugger::Debugger(std::shared_ptr<IDebuggedProcess> debugged_process, const DWO
 	m_debugger_tid(debugging_thread_id),
 	wait_for_debug_event(_cache_wait_for_debug_event()),
 	m_symbol_finder(debugged_process),
-	m_commands()/*,
-	m_threads()*/
+	m_commands(),
+	m_threads(),
+	m_exception_callbacks(),
+	m_thread_creation_callbacks(),
+	m_current_thread_id(0)
 {
 	for (const auto& command : DebuggerCommands::get_commands())
 	{
@@ -35,6 +38,7 @@ void Debugger::debug()
 			{
 				throw WinAPIException("WaitForDebugEvent(Ex) failed"); // TODO: Add GetLastError everywhere
 			}
+			m_current_thread_id = debug_event.dwThreadId;
 			DWORD continue_status = dispatch_debug_event(debug_event);
 			while (continue_status == 1) // TODO: Define enum
 			{
@@ -55,10 +59,9 @@ DWORD Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)
 {
 	if (debug_event.dwProcessId != m_debugged_process->get_process_id())
 	{
-		// TODO: Debugging multiple processes is not yet supported
+		// TODO: Debugging multiple processes is not yet supported. It (Probably) requires an extra thread per process. Or does it? ;)
 		throw std::exception("Unexpected process ID!");
 	}
-	// TODO: Create a class that describes a debug event and allows reading the strings (Only thing shared between them is the thread id and process id).
 	// TODO: When reading strings, cache them (std::optional where if has_value() == false, you read). Do the read as lazy.
 	switch (debug_event.dwDebugEventCode)
 	{
@@ -119,6 +122,24 @@ DWORD Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 		debug_event.is_first_chance(),
 		debug_event.get_exception_code(),
 		static_cast<DWORD64>(debug_event.get_exception_address()));
+
+	// Call registered commands and remove those that have finished
+	auto i = m_exception_callbacks.cbegin();
+	// TODO: That's ugly AF. Find a better way to iterate over a list while deleting elements (Tried saving a side list of elements to be removed. Didn't even compile)
+	while (i != m_exception_callbacks.cend())
+	{
+		bool should_be_removed = !i->first(debug_event, i->second);
+		if (should_be_removed)
+		{
+			i = m_exception_callbacks.erase(i);
+		}
+		else
+		{
+			i++;
+		}
+	}
+
+	// TODO: Remove if should be overwritten by some callback
 	if (debug_event.is_debug_break())
 	{
 		return 1;
@@ -132,6 +153,23 @@ DWORD Debugger::dispatch_thread_creation(CreateThreadDebugEvent& debug_event)
 		debug_event.get_thread_id(),
 		static_cast<DWORD64>(debug_event.get_start_address()));
 	m_threads.emplace_back(debug_event);
+
+	// Call registered commands and remove those that have finished
+	auto i = m_thread_creation_callbacks.cbegin();
+	// TODO: That's ugly AF. Find a better way to iterate over a list while deleting elements (Tried saving a side list of elements to be removed. Didn't even compile)
+	while (i != m_thread_creation_callbacks.cend())
+	{
+		bool should_be_removed = !i->first(debug_event, i->second);
+		if (should_be_removed)
+		{
+			i = m_thread_creation_callbacks.erase(i);
+		}
+		else
+		{
+			i++;
+		}
+	}
+
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
@@ -143,6 +181,7 @@ DWORD Debugger::dispatch_process_creation(CreateProcessDebugEvent& debug_event)
 		debug_event.get_thread_id());
 
 	m_symbol_finder.load_module(debug_event.get_file_handle(), debug_event.get_image_path(), debug_event.get_image_base());
+	m_threads.emplace_back(debug_event);
 
 	// TODO: Cache the process handles
 	return DBG_EXCEPTION_NOT_HANDLED;

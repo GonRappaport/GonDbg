@@ -100,14 +100,92 @@ DWORD DebuggerCommands::get_symbol_name(const std::wstring& params, Debugger& de
 	return 1;
 }
 
-DWORD DebuggerCommands::step(const std::wstring& params, Debugger& debugger)
+class StepCallbackContext :
+	public ICallbackContext
+{
+public:
+	StepCallbackContext(Debugger* dbg, DWORD thread_id) :
+		ICallbackContext(),
+		m_debugger(dbg),
+		m_original_thread_id(thread_id),
+		m_triggered(false)
+	{}
+	virtual ~StepCallbackContext() = default;
+
+	// NOTE: This callback keeps all suspended thread instead of just the thread not to resume, 
+	// in case we'll receive a CreateThread event in between (By a remote process injection)
+	// TODO: Find a more C++-ish way than a raw pointer
+	Debugger* m_debugger;
+	DWORD m_original_thread_id;
+	bool m_triggered;
+};
+
+bool step_command_thread_creation_callback(const CreateThreadDebugEvent& debug_event, std::shared_ptr<ICallbackContext> context_raw)
+{
+	auto context = dynamic_cast<StepCallbackContext*>(context_raw.get());
+	if (context->m_triggered)
+	{
+		return false;
+	}
+
+	// TODO: Preferably use the CreatedThread API. Sadly, ATM I don't pass it here :( And it's a waste of calls
+	// Maybe adapt each callback to receive an appropriate object. In this case, CreatedThread
+	if (-1 == SuspendThread(debug_event.get_handle()))
+	{
+		throw WinAPIException("SuspendThread failed");
+	}
+
+	return true;
+}
+
+bool step_command_exception_callback(const ExceptionDebugEvent& debug_event, std::shared_ptr<ICallbackContext> context_raw)
+{
+	auto context = dynamic_cast<StepCallbackContext*>(context_raw.get());
+
+	if (debug_event.is_single_step())
+	{
+		for (auto& thread : context->m_debugger->get_threads())
+		{
+			if (thread.get_thread_id() != context->m_original_thread_id)
+			{
+				thread.resume();
+			}
+		}
+		context->m_triggered = true;
+		return false;
+	}
+
+	return true;
+}
+
+DWORD DebuggerCommands::step(const std::wstring&, Debugger& debugger)
 {
 	// TODO: Export an API to register to specific debug events (In this case, register_exception_event_handler)
 	// The API will receive a callback that returns a bool. If true, the callback is kept inside the vector. Otherwise, it is removed.
 	// TODO: Idea:
 	// 1. Iterate over all process threads and set trace flag for all of them. (TODO: That requires implementing the thread maintaing)
+	// 1.1. Alternative: Suspend all other threads. // TODO: Making a "context manager" for the freezing is both a good and a bad idea
+	// 1.2. If a new thread is created before your trace happened, suspend it too
 	// 2. Register exception callback that sets off trace flags for all threads, then returns false. Note: Even if it's a different exception, we don't care
-	return 1;
+	// Also register a thread creation callback that suspends new threads
+
+	std::shared_ptr<StepCallbackContext> context(std::make_shared<StepCallbackContext>(&debugger, debugger.get_current_thread_id()));
+	for (auto& thread : debugger.get_threads())
+	{
+		if (thread.get_thread_id() != debugger.get_current_thread_id())
+		{
+			thread.suspend();
+		}
+		else
+		{
+			thread.set_trap_flag();
+		}
+	}
+
+	debugger.register_exception_callback(step_command_exception_callback, context);
+	debugger.register_thread_creation_callback(step_command_thread_creation_callback, context);
+	
+	return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 DWORD DebuggerCommands::list_threads(const std::wstring&, Debugger& debugger)
@@ -132,6 +210,7 @@ std::vector<std::pair<std::wstring, CommandInterface>> DebuggerCommands::get_com
 		std::make_pair(L"db", read_memory),
 		std::make_pair(L"exit", quit),
 		std::make_pair(L"x", get_symbol_name),
-		std::make_pair(L"lt", list_threads)
+		std::make_pair(L"lt", list_threads),
+		//std::make_pair(L"t", step)
 	};
 }
