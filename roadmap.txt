@@ -7,6 +7,7 @@ Plugins
 Integration with python27.dll and creation of a wrapper for the debugger API for use with python in the command
 line or scripts (Will be implemented in a plugin) (Think about support for python3)
 Make PDBs work
+XP Support
 
 Roadmap for version 1.0:
 Python

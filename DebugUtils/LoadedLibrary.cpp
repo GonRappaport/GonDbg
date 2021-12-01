@@ -25,11 +25,13 @@ FARPROC LoadedLibrary::get_export(std::string name) const
 
 std::wstring LoadedLibrary::_s_resolve_full_path(const std::wstring& library_path, const std::vector<std::wstring>& search_paths)
 {
-    std::vector<AutoCloseHandleImpl<DLL_DIRECTORY_COOKIE, nullptr>> added_directories(search_paths.size());
+    std::vector<AutoCloseHandleImpl<DLL_DIRECTORY_COOKIE, nullptr, RemoveDllDirectory>> added_directories;
+
+    added_directories.reserve(search_paths.size());
 
     for (const std::wstring& path : search_paths)
     {
-        added_directories.emplace_back(AddDllDirectory(path.c_str()), RemoveDllDirectory);
+        added_directories.emplace_back(AddDllDirectory(path.c_str()));
     }
 
     // TODO: Loading it twice to get the file path is somewhat of a security issue, but I don't really care right now.
@@ -44,7 +46,7 @@ std::wstring LoadedLibrary::_s_resolve_full_path(const std::wstring& library_pat
         throw WinAPIException("GetModuleFileNameW failed", last_error);
     }
 
-    std::vector<wchar_t> file_path(file_path_length + 1);
+    std::vector<wchar_t> file_path(static_cast<size_t>(file_path_length) + 1);
     if (file_path_length != GetModuleFileNameW(loaded_library.get_value(), file_path.data(), file_path_length))
     {
         throw WinAPIException("GetModuleFileNameW failed");
@@ -57,11 +59,13 @@ std::wstring LoadedLibrary::_s_resolve_full_path(const std::wstring& library_pat
 // TODO: For Windows Vista & Windows 7, requires a KB
 AutoFreeLibrary LoadedLibrary::_s_load_library_extra_paths(const std::wstring& library_path, const std::vector<std::wstring>& search_paths)
 {
-    std::vector<AutoCloseHandleImpl<DLL_DIRECTORY_COOKIE, nullptr>> added_directories(search_paths.size());
+    std::vector<AutoCloseHandleImpl<DLL_DIRECTORY_COOKIE, nullptr, RemoveDllDirectory>> added_directories;
+
+    added_directories.reserve(search_paths.size());
 
     for (const std::wstring& path : search_paths)
     {
-        added_directories.emplace_back(AddDllDirectory(path.c_str()), RemoveDllDirectory);
+        added_directories.emplace_back(AddDllDirectory(path.c_str()));
     }
 
     return AutoFreeLibrary(LoadLibraryExW(library_path.c_str(),

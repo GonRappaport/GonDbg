@@ -77,6 +77,7 @@ public:
 	RemotePointer get_start_address() const { return m_start_address; }
 
 private:
+	// NOTE: This shouldn't be closed as it will be closed by the system after the EXIT_THREAD debug event
 	const HANDLE m_handle;
 	const RemotePointer m_local_base;
 	const RemotePointer m_start_address;
@@ -114,7 +115,7 @@ public:
 
 private:
 	AutoCloseHandle m_file_handle;
-	// TODO: Do these need to be closed?
+	// NOTE: These shouldn't be closed as they will be closed by the system after the EXIT_PROCESS debug event
 	const HANDLE m_process_handle;
 	const HANDLE m_thread_handle;
 	const RemotePointer m_image_base;

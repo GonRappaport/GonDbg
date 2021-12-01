@@ -1,4 +1,5 @@
 #pragma once
+// TODO: This wasn't compiled for x86 and has some warnings and errors
 
 #include <Windows.h>
 #include <memory>
