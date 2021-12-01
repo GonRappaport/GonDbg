@@ -110,6 +110,19 @@ DWORD DebuggerCommands::step(const std::wstring& params, Debugger& debugger)
 	return 1;
 }
 
+DWORD DebuggerCommands::list_threads(const std::wstring&, Debugger& debugger)
+{
+	// TODO: Separate to running and dead threads?
+	const auto& threads = debugger.get_threads();
+	for (const auto& thread : threads)
+	{
+		debugger.get_io_handler()->write_formatted(L"0x%lX",
+			thread.get_thread_id());
+	}
+
+	return 1;
+}
+
 std::vector<std::pair<std::wstring, CommandInterface>> DebuggerCommands::get_commands()
 {
 	return {
@@ -119,5 +132,6 @@ std::vector<std::pair<std::wstring, CommandInterface>> DebuggerCommands::get_com
 		std::make_pair(L"db", read_memory),
 		std::make_pair(L"exit", quit),
 		std::make_pair(L"x", get_symbol_name),
+		std::make_pair(L"lt", list_threads)
 	};
 }

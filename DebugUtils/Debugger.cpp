@@ -153,6 +153,7 @@ DWORD Debugger::dispatch_thread_termination(ExitThreadDebugEvent& debug_event)
 	m_io_handler->write_formatted(L"Thread died. Thread ID: %lu, exit code: %lu",
 		debug_event.get_thread_id(),
 		debug_event.get_exit_code());
+	// TODO: Remove thread or mark as dead
 	return DBG_EXCEPTION_NOT_HANDLED;
 }
 

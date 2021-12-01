@@ -11,6 +11,8 @@ public:
 	{}
 	~CreatedThread() = default;
 
+	DWORD get_thread_id() const { return m_thread_id; }
+
 	void suspend();
 	void resume();
 	bool is_suspended();

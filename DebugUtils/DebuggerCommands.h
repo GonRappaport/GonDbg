@@ -4,6 +4,7 @@
 
 namespace DebuggerCommands
 {
+	// TODO: Sort that to categores
 	DWORD help(const std::wstring& params, Debugger& debugger);
 	DWORD go(const std::wstring& params, Debugger& debugger);
 	DWORD list_modules(const std::wstring& params, Debugger& debugger);
@@ -11,6 +12,7 @@ namespace DebuggerCommands
 	DWORD quit(const std::wstring& params, Debugger& debugger);
 	DWORD get_symbol_name(const std::wstring& params, Debugger& debugger);
 	DWORD step(const std::wstring& params, Debugger& debugger);
+	DWORD list_threads(const std::wstring& params, Debugger& debugger);
 
 	std::vector<std::pair<std::wstring, CommandInterface>> get_commands();
 }
