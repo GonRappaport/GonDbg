@@ -7,11 +7,11 @@ class CreatedThread
 {
 public:
 	CreatedThread(const CreateThreadDebugEvent& debug_event):
-		m_thread_handle(debug_event.get_handle()), // Note: this is a partial  privilege handle
+		m_thread_handle(debug_event.get_handle()), // Note: this is a partial privilege handle
 		m_thread_id(debug_event.get_thread_id())
 	{}
 	CreatedThread(const CreateProcessDebugEvent& debug_event) :
-		m_thread_handle(debug_event.get_thread_handle()), // Note: this is a partial  privilege handle
+		m_thread_handle(debug_event.get_thread_handle()), // Note: this is a partial privilege handle
 		m_thread_id(debug_event.get_thread_id())
 	{}
 	~CreatedThread() = default;
@@ -32,6 +32,8 @@ public:
 	bool is_trap_flag_set();
 
 private:
-	AutoCloseHandle m_thread_handle;
+	// AutoCloseHandle m_thread_handle; // TODO: It seems this handle doesn't need to be closed. Find a precise documentation for that, other than the fact that MSDN
+	// doesn't state that it needs to be closed, as it does for the file handle
+	HANDLE m_thread_handle;
 	const DWORD m_thread_id;
 };
