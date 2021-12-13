@@ -1,126 +1,139 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="DebuggerCore">
+      <UniqueIdentifier>{7cc6548a-8d7c-49b1-9344-94472dd8cd2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{6b9ee30d-adf9-41a1-a43b-2d7a107c72e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{b5dc6f6e-09d6-4a45-9abc-1a17435a4c67}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DebugeeObjects">
+      <UniqueIdentifier>{fc482fc8-d409-4a4c-9734-3104a68c1078}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Commands">
+      <UniqueIdentifier>{24063c4a-1196-4c08-96ff-ce7d7fa662d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Commands\Plugins">
+      <UniqueIdentifier>{655e5f3c-b5a7-41d1-a386-9ecabccc81d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UserInterface">
+      <UniqueIdentifier>{1264e173-3775-4153-bdfb-5b9bcb32ee7b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Debugger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProcUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AutoCloseHandle.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CreatedThread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IDebuggedProcess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ISimpleIO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ConsoleIO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DebugEvents.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AttachedProcess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SymbolFinder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LoadedModule.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CommandsRegistration.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DebuggerCommands.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CreatedProcess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RunningProcess.h">
-      <Filter>Header Files</Filter>
+      <Filter>DebuggerCore</Filter>
     </ClInclude>
     <ClInclude Include="Exceptions.h">
-      <Filter>Header Files</Filter>
+      <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="PluginsRegistration.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="DebugEvents.h">
+      <Filter>DebuggerCore</Filter>
+    </ClInclude>
+    <ClInclude Include="SymbolFinder.h">
+      <Filter>DebuggerCore</Filter>
+    </ClInclude>
+    <ClInclude Include="AutoCloseHandle.hpp">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcUtils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="RunningProcess.h">
+      <Filter>DebugeeObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="IDebuggedProcess.h">
+      <Filter>DebugeeObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="CreatedThread.h">
+      <Filter>DebugeeObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="CreatedProcess.h">
+      <Filter>DebugeeObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="AttachedProcess.h">
+      <Filter>DebugeeObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="ISimpleIO.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleIO.h">
+      <Filter>UserInterface</Filter>
     </ClInclude>
     <ClInclude Include="LoadedLibrary.h">
-      <Filter>Header Files</Filter>
+      <Filter>Commands\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginsRegistration.h">
+      <Filter>Commands\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="LoadedModule.h">
+      <Filter>Commands\Plugins</Filter>
     </ClInclude>
     <ClInclude Include="CommandInterface.h">
-      <Filter>Header Files</Filter>
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandsRegistration.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="DebuggerCommands.h">
+      <Filter>Commands</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Debugger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProcUtils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CreatedThread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ConsoleIO.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ISimpleIO.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>DebuggerCore</Filter>
     </ClCompile>
     <ClCompile Include="DebugEvents.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AttachedProcess.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="IDebuggedProcess.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>DebuggerCore</Filter>
     </ClCompile>
     <ClCompile Include="SymbolFinder.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>DebuggerCore</Filter>
     </ClCompile>
-    <ClCompile Include="LoadedModule.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CommandsRegistration.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DebuggerCommands.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="AttachedProcess.cpp">
+      <Filter>DebugeeObjects</Filter>
     </ClCompile>
     <ClCompile Include="CreatedProcess.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>DebugeeObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="CreatedThread.cpp">
+      <Filter>DebugeeObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="IDebuggedProcess.cpp">
+      <Filter>DebugeeObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcUtils.cpp">
+      <Filter>Utilities</Filter>
     </ClCompile>
     <ClCompile Include="RunningProcess.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>DebugeeObjects</Filter>
     </ClCompile>
-    <ClCompile Include="PluginsRegistration.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ConsoleIO.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="ISimpleIO.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandsRegistration.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="DebuggerCommands.cpp">
+      <Filter>Commands</Filter>
     </ClCompile>
     <ClCompile Include="LoadedLibrary.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Commands\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="LoadedModule.cpp">
+      <Filter>Commands\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginsRegistration.cpp">
+      <Filter>Commands\Plugins</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
