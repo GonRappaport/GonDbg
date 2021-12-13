@@ -268,6 +268,12 @@ CommandResponse Debugger::handle_user_command()
 {
 	std::wstring command_line = m_io_handler->prompt(L"GonDBG>");
 
+	// TODO: Can do the same as WinDBG and replay the last command
+	while (0 == command_line.length())
+	{
+		command_line = m_io_handler->prompt(L"GonDBG>");
+	}
+
 	const auto command_params = CommandsRegistration::s_parse_command(command_line);
 
 	try
