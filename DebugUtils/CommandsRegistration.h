@@ -6,13 +6,15 @@
 #include <optional>
 #include <exception>
 
+#include "CommandInterface.h"
+
 class CommandNotFoundException:
 	public std::exception
 {};
 
 // Forward reference
 class Debugger;
-using CommandInterface = std::function<DWORD(const std::wstring&, Debugger&)>;
+using CommandInterface = std::function<CommandResponse(const std::wstring&, Debugger&)>;
 
 class RegisteredCommand
 {

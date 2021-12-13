@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="AttachedProcess.h" />
     <ClInclude Include="AutoCloseHandle.hpp" />
+    <ClInclude Include="CommandInterface.h" />
     <ClInclude Include="CommandsRegistration.h" />
     <ClInclude Include="ConsoleIO.h" />
     <ClInclude Include="CreatedThread.h" />

@@ -3,7 +3,7 @@
 
 // TODO: Define the enum for the magic number 1 here used to indicate run another command. Also, make it the default command ret value
 
-DWORD DebuggerCommands::help(const std::wstring&, Debugger& debugger)
+CommandResponse DebuggerCommands::help(const std::wstring&, Debugger& debugger)
 {
 	debugger.get_io_handler()->write(L"Supported commands:");
 	for (const auto& command : get_commands())
@@ -12,15 +12,15 @@ DWORD DebuggerCommands::help(const std::wstring&, Debugger& debugger)
 			command.first.c_str());
 	}
 	
-	return 1;
+	return CommandResponse::NoResponse;
 }
 
-DWORD DebuggerCommands::go(const std::wstring&, Debugger&)
+CommandResponse DebuggerCommands::go(const std::wstring&, Debugger&)
 {
-    return DBG_EXCEPTION_NOT_HANDLED;
+    return CommandResponse::ContinueExecution;
 }
 
-DWORD DebuggerCommands::list_modules(const std::wstring&, Debugger& debugger)
+CommandResponse DebuggerCommands::list_modules(const std::wstring&, Debugger& debugger)
 {
 	const auto& loaded_modules = debugger.get_symbol_finder().get_loaded_modules();
 	for (const auto& m : loaded_modules)
@@ -31,10 +31,10 @@ DWORD DebuggerCommands::list_modules(const std::wstring&, Debugger& debugger)
 			m.get_image_name().c_str());
 	}
 
-	return 1;
+	return CommandResponse::NoResponse;
 }
 
-DWORD DebuggerCommands::read_memory(const std::wstring& params, Debugger& debugger)
+CommandResponse DebuggerCommands::read_memory(const std::wstring& params, Debugger& debugger)
 {
 	const SIZE_T DEFAULT_READ_LENGTH = 0x40;
 	RemotePointer address;
@@ -50,7 +50,7 @@ DWORD DebuggerCommands::read_memory(const std::wstring& params, Debugger& debugg
 		break;
 	default:
 		debugger.get_io_handler()->write(L"Invalid syntax. Usage: db <address> [L<length>]");
-		return 1;
+		return CommandResponse::NoResponse;
 	}
 
 	// TODO: Add support for invalid addresses (An exception). Maybe wrap this entire function with try
@@ -73,15 +73,15 @@ DWORD DebuggerCommands::read_memory(const std::wstring& params, Debugger& debugg
 		}
 	}
 
-	return 1;
+	return CommandResponse::NoResponse;
 }
 
-DWORD DebuggerCommands::quit(const std::wstring&, Debugger&)
+CommandResponse DebuggerCommands::quit(const std::wstring&, Debugger&)
 {
 	throw DebuggingEnd();
 }
 
-DWORD DebuggerCommands::get_symbol_name(const std::wstring& params, Debugger& debugger)
+CommandResponse DebuggerCommands::get_symbol_name(const std::wstring& params, Debugger& debugger)
 {
 	RemotePointer address;
 
@@ -92,12 +92,12 @@ DWORD DebuggerCommands::get_symbol_name(const std::wstring& params, Debugger& de
 		break;
 	default:
 		debugger.get_io_handler()->write(L"Invalid syntax. Usage: x <address>");
-		return 1;
+		return CommandResponse::NoResponse;
 	}
 
 	debugger.get_io_handler()->write(debugger.get_symbol_finder().get_symbol(address));
 
-	return 1;
+	return CommandResponse::NoResponse;
 }
 
 class StepCallbackContext :
@@ -158,7 +158,7 @@ bool step_command_exception_callback(const ExceptionDebugEvent& debug_event, std
 	return true;
 }
 
-DWORD DebuggerCommands::step(const std::wstring&, Debugger& debugger)
+CommandResponse DebuggerCommands::step(const std::wstring&, Debugger& debugger)
 {
 	// TODO: Export an API to register to specific debug events (In this case, register_exception_event_handler)
 	// The API will receive a callback that returns a bool. If true, the callback is kept inside the vector. Otherwise, it is removed.
@@ -185,10 +185,10 @@ DWORD DebuggerCommands::step(const std::wstring&, Debugger& debugger)
 	debugger.register_exception_callback(step_command_exception_callback, context);
 	debugger.register_thread_creation_callback(step_command_thread_creation_callback, context);
 	
-	return DBG_EXCEPTION_NOT_HANDLED;
+	return CommandResponse::ContinueExecution;
 }
 
-DWORD DebuggerCommands::list_threads(const std::wstring&, Debugger& debugger)
+CommandResponse DebuggerCommands::list_threads(const std::wstring&, Debugger& debugger)
 {
 	// TODO: Separate to running and dead threads?
 	const auto& threads = debugger.get_threads();
@@ -198,7 +198,7 @@ DWORD DebuggerCommands::list_threads(const std::wstring&, Debugger& debugger)
 			thread.get_thread_id());
 	}
 
-	return 1;
+	return CommandResponse::NoResponse;
 }
 
 std::vector<std::pair<std::wstring, CommandInterface>> DebuggerCommands::get_commands()
@@ -211,6 +211,6 @@ std::vector<std::pair<std::wstring, CommandInterface>> DebuggerCommands::get_com
 		std::make_pair(L"exit", quit),
 		std::make_pair(L"x", get_symbol_name),
 		std::make_pair(L"lt", list_threads),
-		//std::make_pair(L"t", step)
+		std::make_pair(L"t", step)
 	};
 }

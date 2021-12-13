@@ -13,6 +13,7 @@
 #include "SymbolFinder.h"
 #include "CommandsRegistration.h"
 #include "CreatedThread.h"
+#include "CommandInterface.h"
 
 using PFN_WAITFORDEBUGEVENT = decltype(&WaitForDebugEvent);
 
@@ -86,18 +87,18 @@ private:
 
 	static PFN_WAITFORDEBUGEVENT _cache_wait_for_debug_event();
 
-	DWORD dispatch_debug_event(const DEBUG_EVENT& debug_event);
-	DWORD dispatch_exception(ExceptionDebugEvent& debug_event);
-	DWORD dispatch_thread_creation(CreateThreadDebugEvent& debug_event);
-	DWORD dispatch_process_creation(CreateProcessDebugEvent& debug_event);
-	DWORD dispatch_thread_termination(ExitThreadDebugEvent& debug_event);
-	DWORD dispatch_process_termination(ExitProcessDebugEvent& debug_event);
-	DWORD dispatch_module_load(LoadDllDebugEvent& debug_event);
-	DWORD dispatch_module_unload(UnloadDllDebugEvent& debug_event);
-	DWORD dispatch_debug_string(DebugStringDebugEvent& debug_event);
-	DWORD dispatch_rip(RipDebugEvent& debug_event);
+	CommandResponse dispatch_debug_event(const DEBUG_EVENT& debug_event);
+	CommandResponse dispatch_exception(ExceptionDebugEvent& debug_event);
+	CommandResponse dispatch_thread_creation(CreateThreadDebugEvent& debug_event);
+	CommandResponse dispatch_process_creation(CreateProcessDebugEvent& debug_event);
+	CommandResponse dispatch_thread_termination(ExitThreadDebugEvent& debug_event);
+	CommandResponse dispatch_process_termination(ExitProcessDebugEvent& debug_event);
+	CommandResponse dispatch_module_load(LoadDllDebugEvent& debug_event);
+	CommandResponse dispatch_module_unload(UnloadDllDebugEvent& debug_event);
+	CommandResponse dispatch_debug_string(DebugStringDebugEvent& debug_event);
+	CommandResponse dispatch_rip(RipDebugEvent& debug_event);
 
-	DWORD handle_user_command();
+	CommandResponse handle_user_command();
 
 	virtual bool handle_control(const DWORD ctrl_type);
 

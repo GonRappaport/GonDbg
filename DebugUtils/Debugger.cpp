@@ -39,10 +39,23 @@ void Debugger::debug()
 				throw WinAPIException("WaitForDebugEvent(Ex) failed"); // TODO: Add GetLastError everywhere
 			}
 			m_current_thread_id = debug_event.dwThreadId;
-			DWORD continue_status = dispatch_debug_event(debug_event);
-			while (continue_status == 1) // TODO: Define enum
+			CommandResponse debugger_response = dispatch_debug_event(debug_event);
+			DWORD continue_status = DBG_EXCEPTION_NOT_HANDLED;
+			while (debugger_response == CommandResponse::NoResponse)
 			{
-				continue_status = handle_user_command();
+				debugger_response = handle_user_command();
+			}
+			switch (debugger_response)
+			{
+			case CommandResponse::ContinueUnhandled:
+				continue_status = DBG_EXCEPTION_NOT_HANDLED;
+				break;
+			case CommandResponse::ContinueHandled:
+				continue_status = DBG_CONTINUE;
+				break;
+			case CommandResponse::ContinueExecution:
+				continue_status = DBG_CONTINUE; // TODO: Find the appropriate value to return
+				break;
 			}
 			// TODO: For time travel debugging, hook this function with one that does nothing (I think) to simply "debug" the trace. You'll also hook the wait function
 			if (!ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, continue_status))
@@ -55,7 +68,7 @@ void Debugger::debug()
 	{}
 }
 
-DWORD Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)
+CommandResponse Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)
 {
 	if (debug_event.dwProcessId != m_debugged_process->get_process_id())
 	{
@@ -115,7 +128,7 @@ DWORD Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)
 	}
 }
 
-DWORD Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
+CommandResponse Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Exception raised. Thread ID: %lu, First chance: %i, Exception Code: 0x%08lX, Exception Address: 0x%llX",
 		debug_event.get_thread_id(),
@@ -142,12 +155,20 @@ DWORD Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 	// TODO: Remove if should be overwritten by some callback
 	if (debug_event.is_debug_break())
 	{
-		return 1;
+		return CommandResponse::NoResponse;
 	}
-	return DBG_EXCEPTION_NOT_HANDLED;
+	else if (debug_event.is_single_step())
+	{
+		return CommandResponse::NoResponse;
+	}
+	else if (debug_event.is_first_chance())
+	{
+		return CommandResponse::ContinueExecution;
+	}
+	return CommandResponse::ContinueExecution;
 }
 
-DWORD Debugger::dispatch_thread_creation(CreateThreadDebugEvent& debug_event)
+CommandResponse Debugger::dispatch_thread_creation(CreateThreadDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Thread created. Thread ID: %lu, Start Address: 0x%llX",
 		debug_event.get_thread_id(),
@@ -170,10 +191,10 @@ DWORD Debugger::dispatch_thread_creation(CreateThreadDebugEvent& debug_event)
 		}
 	}
 
-	return DBG_EXCEPTION_NOT_HANDLED;
+	return CommandResponse::ContinueExecution;
 }
 
-DWORD Debugger::dispatch_process_creation(CreateProcessDebugEvent& debug_event)
+CommandResponse Debugger::dispatch_process_creation(CreateProcessDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Process created. Process ID: %lu, process name: %ws, thread ID: %lu",
 		debug_event.get_process_id(),
@@ -184,19 +205,19 @@ DWORD Debugger::dispatch_process_creation(CreateProcessDebugEvent& debug_event)
 	m_threads.emplace_back(debug_event);
 
 	// TODO: Cache the process handles
-	return DBG_EXCEPTION_NOT_HANDLED;
+	return CommandResponse::ContinueExecution;
 }
 
-DWORD Debugger::dispatch_thread_termination(ExitThreadDebugEvent& debug_event)
+CommandResponse Debugger::dispatch_thread_termination(ExitThreadDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Thread died. Thread ID: %lu, exit code: %lu",
 		debug_event.get_thread_id(),
 		debug_event.get_exit_code());
 	// TODO: Remove thread or mark as dead
-	return DBG_EXCEPTION_NOT_HANDLED;
+	return CommandResponse::ContinueExecution;
 }
 
-DWORD Debugger::dispatch_process_termination(ExitProcessDebugEvent& debug_event)
+CommandResponse Debugger::dispatch_process_termination(ExitProcessDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Process died. Process ID: %lu, exit code: %lu",
 		debug_event.get_process_id(),
@@ -205,7 +226,7 @@ DWORD Debugger::dispatch_process_termination(ExitProcessDebugEvent& debug_event)
 	throw DebuggingEnd();
 }
 
-DWORD Debugger::dispatch_module_load(LoadDllDebugEvent& debug_event)
+CommandResponse Debugger::dispatch_module_load(LoadDllDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Module loaded. Module address: 0x%llX, module name: %ws",
 		static_cast<DWORD64>(debug_event.get_image_base()),
@@ -213,36 +234,36 @@ DWORD Debugger::dispatch_module_load(LoadDllDebugEvent& debug_event)
 
 	m_symbol_finder.load_module(debug_event.get_file_handle(), debug_event.get_image_path(), debug_event.get_image_base());
 
-	return DBG_EXCEPTION_NOT_HANDLED;
+	return CommandResponse::ContinueExecution;
 }
 
-DWORD Debugger::dispatch_module_unload(UnloadDllDebugEvent& debug_event)
+CommandResponse Debugger::dispatch_module_unload(UnloadDllDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"Module unloaded. Module address: 0x%llX",
 		static_cast<DWORD64>(debug_event.get_image_base()));
 	m_symbol_finder.unload_module(debug_event.get_image_base());
-	return DBG_EXCEPTION_NOT_HANDLED;
+	return CommandResponse::ContinueExecution;
 }
 
-DWORD Debugger::dispatch_debug_string(DebugStringDebugEvent& debug_event)
+CommandResponse Debugger::dispatch_debug_string(DebugStringDebugEvent& debug_event)
 {
 	if (debug_event.is_relevant())
 	{
 		m_io_handler->write_formatted(L"Debug string output: %ws",
 			debug_event.get_debug_string().c_str());
 	}
-	return DBG_EXCEPTION_NOT_HANDLED;
+	return CommandResponse::ContinueExecution;
 }
 
-DWORD Debugger::dispatch_rip(RipDebugEvent& debug_event)
+CommandResponse Debugger::dispatch_rip(RipDebugEvent& debug_event)
 {
 	m_io_handler->write_formatted(L"RIP raised. Error: 0x%08lX, type: %lu",
 		debug_event.get_error(),
 		debug_event.get_type());
-	return DBG_EXCEPTION_NOT_HANDLED;
+	return CommandResponse::ContinueExecution;
 }
 
-DWORD Debugger::handle_user_command()
+CommandResponse Debugger::handle_user_command()
 {
 	std::wstring command_line = m_io_handler->prompt(L"GonDBG>");
 
@@ -256,7 +277,7 @@ DWORD Debugger::handle_user_command()
 	catch (const CommandNotFoundException&)
 	{
 		m_io_handler->write(L"Unknown command");
-		return 1;
+		return CommandResponse::NoResponse;
 	}
 }
 
