@@ -7,5 +7,6 @@ enum class CommandResponse : DWORD
 	NoResponse,
 	ContinueExecution,
 	ContinueHandled,
-	ContinueUnhandled
+	ContinueUnhandled,
+	ContinueDelayed // Unsupported // TODO: DBG_REPLY_LATER
 };

@@ -54,6 +54,7 @@ public:
 	bool is_first_chance() const { return m_first_chance; }
 	bool is_debug_break() const { return m_exception_record.ExceptionCode == EXCEPTION_BREAKPOINT; }
 	bool is_single_step() const { return m_exception_record.ExceptionCode == EXCEPTION_SINGLE_STEP; }
+	bool is_trap() const;
 
 private:
 	const EXCEPTION_RECORD m_exception_record;

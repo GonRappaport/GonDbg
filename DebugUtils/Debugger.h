@@ -46,7 +46,8 @@ public:
 		m_threads(std::move(dbg.m_threads)),
 		m_exception_callbacks(std::move(dbg.m_exception_callbacks)),
 		m_thread_creation_callbacks(std::move(dbg.m_thread_creation_callbacks)),
-		m_current_thread_id(std::exchange(dbg.m_current_thread_id, 0))
+		m_current_thread_id(std::exchange(dbg.m_current_thread_id, 0)),
+		m_preferred_continuation_status(DBG_EXCEPTION_NOT_HANDLED)
 	{}
 
 	virtual ~Debugger() = default;
@@ -84,6 +85,7 @@ private:
 	std::list<std::pair<ExceptionCallback, std::shared_ptr<ICallbackContext>>> m_exception_callbacks;
 	std::list<std::pair<ThreadCreationCallback, std::shared_ptr<ICallbackContext>>> m_thread_creation_callbacks;
 	DWORD m_current_thread_id;
+	DWORD m_preferred_continuation_status;
 
 	static PFN_WAITFORDEBUGEVENT _cache_wait_for_debug_event();
 

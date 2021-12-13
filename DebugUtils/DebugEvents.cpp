@@ -31,6 +31,22 @@ std::wstring DebugEvent::_deref_read_remote_string(const RemotePointer base_addr
 	return std::wstring(L"");
 }
 
+bool ExceptionDebugEvent::is_trap() const
+{
+	switch (m_exception_record.ExceptionCode)
+	{
+	case EXCEPTION_BREAKPOINT:
+		__fallthrough;
+	case EXCEPTION_SINGLE_STEP:
+		__fallthrough;
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
 bool DebugStringDebugEvent::is_relevant() const
 {
 	// TODO: Improve that according to what windbg does

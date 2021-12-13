@@ -17,7 +17,8 @@ Debugger::Debugger(std::shared_ptr<IDebuggedProcess> debugged_process, const DWO
 	m_threads(),
 	m_exception_callbacks(),
 	m_thread_creation_callbacks(),
-	m_current_thread_id(0)
+	m_current_thread_id(0),
+	m_preferred_continuation_status(DBG_EXCEPTION_NOT_HANDLED)
 {
 	for (const auto& command : DebuggerCommands::get_commands())
 	{
@@ -38,6 +39,7 @@ void Debugger::debug()
 			{
 				throw WinAPIException("WaitForDebugEvent(Ex) failed"); // TODO: Add GetLastError everywhere
 			}
+			m_preferred_continuation_status = DBG_EXCEPTION_NOT_HANDLED;
 			m_current_thread_id = debug_event.dwThreadId;
 			CommandResponse debugger_response = dispatch_debug_event(debug_event);
 			DWORD continue_status = DBG_EXCEPTION_NOT_HANDLED;
@@ -54,7 +56,7 @@ void Debugger::debug()
 				continue_status = DBG_CONTINUE;
 				break;
 			case CommandResponse::ContinueExecution:
-				continue_status = DBG_CONTINUE; // TODO: Find the appropriate value to return
+				continue_status = m_preferred_continuation_status;
 				break;
 			}
 			// TODO: For time travel debugging, hook this function with one that does nothing (I think) to simply "debug" the trace. You'll also hook the wait function
@@ -152,19 +154,18 @@ CommandResponse Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 		}
 	}
 
+	if (debug_event.is_trap())
+	{
+		m_preferred_continuation_status = DBG_CONTINUE;
+	}
+
 	// TODO: Remove if should be overwritten by some callback
-	if (debug_event.is_debug_break())
+	if (debug_event.is_debug_break() ||
+		debug_event.is_single_step())
 	{
 		return CommandResponse::NoResponse;
 	}
-	else if (debug_event.is_single_step())
-	{
-		return CommandResponse::NoResponse;
-	}
-	else if (debug_event.is_first_chance())
-	{
-		return CommandResponse::ContinueExecution;
-	}
+
 	return CommandResponse::ContinueExecution;
 }
 
