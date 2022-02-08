@@ -21,6 +21,7 @@ CommandResponse DebuggerCommands::help(const std::wstring&, Debugger& debugger)
 CommandResponse DebuggerCommands::go(const std::wstring&, Debugger& dbg)
 {
 	// First perform a single step to allow a breakpoint to reset, then continue normally
+	dbg.expect_single_step();
 	DebuggerCommands::step(L"", dbg);
 	return CommandResponse::ContinueExecution;
 }
@@ -189,7 +190,7 @@ public:
 		m_debugger(dbg),
 		m_breakpoint_address(address),
 		m_original_code(original_code),
-		m_breakpoint_hit(false)
+		m_hitting_thread_id(0)
 	{}
 	virtual ~BreakpointCallbackContext() = default;
 
@@ -197,7 +198,7 @@ public:
 	Debugger* m_debugger;
 	RemotePointer m_breakpoint_address;
 	BYTE m_original_code;
-	bool m_breakpoint_hit;
+	DWORD m_hitting_thread_id;
 };
 
 static std::list<std::shared_ptr<BreakpointCallbackContext>> m_registered_breakpoints;
@@ -209,23 +210,23 @@ bool breakpoint_command_exception_callback(const ExceptionDebugEvent& debug_even
 	if (debug_event.is_debug_break() && 
 		(context->m_breakpoint_address == debug_event.get_exception_address()))
 	{
-		if (context->m_breakpoint_hit)
+		if (context->m_hitting_thread_id)
 		{
 			// TODO: That shouldn't be possible. Switch that to an assert once this flow is tested.
 			throw std::exception("A breakpoint was hit twice in a row, which is impossible");
 		}
 		// Patch back the original code and set the flag.
 		context->m_debugger->get_process()->write_memory(context->m_breakpoint_address, { context->m_original_code });
-		context->m_breakpoint_hit = true;
+		context->m_hitting_thread_id = context->m_debugger->get_current_thread_id();
 		// We now assume that a single step will be performed.
 	}
 	else if (debug_event.is_single_step() &&
-			 ((context->m_breakpoint_address + 1) == debug_event.get_exception_address()) &&
-			 context->m_breakpoint_hit)
+			 //((context->m_breakpoint_address + 1) == debug_event.get_exception_address()) && // TODO: This validation is incorrect since we don't (yet) know how long the opcode is
+			 (0 != context->m_hitting_thread_id))
 	{
 		// Reset the flag and restore the breakpoint
 		context->m_debugger->get_process()->write_memory(context->m_breakpoint_address, { BREAKPOINT_OPCODE });
-		context->m_breakpoint_hit = false;
+		context->m_hitting_thread_id = 0;
 	}
 
 	return true;
@@ -298,7 +299,7 @@ CommandResponse DebuggerCommands::clear_breakpoint(const std::wstring& params, D
 		if (address == context->m_breakpoint_address)
 		{
 			// If the breakpoint is active, remove it.
-			if (!context->m_breakpoint_hit)
+			if (0 == context->m_hitting_thread_id)
 			{
 				debugger.get_process()->write_memory(context->m_breakpoint_address, { context->m_original_code });
 			}

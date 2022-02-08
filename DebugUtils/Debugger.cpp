@@ -18,7 +18,8 @@ Debugger::Debugger(std::shared_ptr<IDebuggedProcess> debugged_process, const DWO
 	m_exception_callbacks(),
 	m_thread_creation_callbacks(),
 	m_current_thread_id(0),
-	m_preferred_continuation_status(DBG_EXCEPTION_NOT_HANDLED)
+	m_preferred_continuation_status(DBG_EXCEPTION_NOT_HANDLED),
+	m_single_step_expected(false)
 {
 	for (const auto& command : DebuggerCommands::get_commands())
 	{
@@ -132,11 +133,14 @@ CommandResponse Debugger::dispatch_debug_event(const DEBUG_EVENT& debug_event)
 
 CommandResponse Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 {
-	m_io_handler->write_formatted(L"Exception raised. Thread ID: %lu, First chance: %i, Exception Code: 0x%08lX, Exception Address: 0x%llX",
-		debug_event.get_thread_id(),
-		debug_event.is_first_chance(),
-		debug_event.get_exception_code(),
-		static_cast<DWORD64>(debug_event.get_exception_address()));
+	//if (!m_single_step_expected)
+	{
+		m_io_handler->write_formatted(L"Exception raised. Thread ID: %lu, First chance: %i, Exception Code: 0x%08lX, Exception Address: 0x%llX",
+			debug_event.get_thread_id(),
+			debug_event.is_first_chance(),
+			debug_event.get_exception_code(),
+			static_cast<DWORD64>(debug_event.get_exception_address()));
+	}
 
 	// Call registered commands and remove those that have finished
 	auto i = m_exception_callbacks.cbegin();
@@ -160,10 +164,19 @@ CommandResponse Debugger::dispatch_exception(ExceptionDebugEvent& debug_event)
 	}
 
 	// TODO: Remove if should be overwritten by some callback
-	if (debug_event.is_debug_break() ||
-		debug_event.is_single_step())
+	if (debug_event.is_debug_break())
 	{
 		return CommandResponse::NoResponse;
+	}
+		
+	if (debug_event.is_single_step())
+	{
+		if (!m_single_step_expected)
+		{
+			return CommandResponse::NoResponse;
+		}
+		// A single step was expected and indeed occured, reset the flag.
+		m_single_step_expected = false;
 	}
 
 	return CommandResponse::ContinueExecution;
@@ -214,7 +227,11 @@ CommandResponse Debugger::dispatch_thread_termination(ExitThreadDebugEvent& debu
 	m_io_handler->write_formatted(L"Thread died. Thread ID: %lu, exit code: %lu",
 		debug_event.get_thread_id(),
 		debug_event.get_exit_code());
-	// TODO: Remove thread or mark as dead
+	// TODO: Instead of removing, mark as dead and change the default API to return live threads only
+	m_threads.remove_if([&debug_event](CreatedThread& thread)
+		{
+			return thread.get_thread_id() == debug_event.get_thread_id();
+		});
 	return CommandResponse::ContinueExecution;
 }
 

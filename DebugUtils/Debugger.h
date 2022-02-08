@@ -47,7 +47,8 @@ public:
 		m_exception_callbacks(std::move(dbg.m_exception_callbacks)),
 		m_thread_creation_callbacks(std::move(dbg.m_thread_creation_callbacks)),
 		m_current_thread_id(std::exchange(dbg.m_current_thread_id, 0)),
-		m_preferred_continuation_status(DBG_EXCEPTION_NOT_HANDLED)
+		m_preferred_continuation_status(dbg.m_preferred_continuation_status),
+		m_single_step_expected(dbg.m_single_step_expected)
 	{}
 
 	virtual ~Debugger() = default;
@@ -70,6 +71,11 @@ public:
 	void register_exception_callback(ExceptionCallback callback, std::shared_ptr<ICallbackContext> context) { m_exception_callbacks.emplace_back(std::make_pair(callback, context)); }
 	void register_thread_creation_callback(ThreadCreationCallback callback, std::shared_ptr<ICallbackContext> context) { m_thread_creation_callbacks.emplace_back(std::make_pair(callback, context)); }
 
+	// This function can be used to set the next received single-step to be "expected", meaning it won't go through normal processing.
+	// Exception registrations will still execute.
+	// This flag will auto-reset.
+	void expect_single_step() { m_single_step_expected = true; }
+
 private:
 	// Initial data
 	// Only the thread that initiated debugging can wait for debug events for a given process
@@ -86,6 +92,7 @@ private:
 	std::list<std::pair<ThreadCreationCallback, std::shared_ptr<ICallbackContext>>> m_thread_creation_callbacks;
 	DWORD m_current_thread_id;
 	DWORD m_preferred_continuation_status;
+	bool m_single_step_expected;
 
 	static PFN_WAITFORDEBUGEVENT _cache_wait_for_debug_event();
 
