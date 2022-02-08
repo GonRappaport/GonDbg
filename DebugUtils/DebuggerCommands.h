@@ -13,6 +13,9 @@ namespace DebuggerCommands
 	CommandResponse get_symbol_name(const std::wstring& params, Debugger& debugger);
 	CommandResponse step(const std::wstring& params, Debugger& debugger);
 	CommandResponse list_threads(const std::wstring& params, Debugger& debugger);
+	CommandResponse breakpoint(const std::wstring& params, Debugger& debugger);
+	CommandResponse clear_breakpoint(const std::wstring& params, Debugger& debugger);
+	CommandResponse list_breakpoints(const std::wstring& params, Debugger& debugger);
 
 	std::vector<std::pair<std::wstring, CommandInterface>> get_commands();
 }

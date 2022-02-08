@@ -8,6 +8,10 @@ Integration with python27.dll and creation of a wrapper for the debugger API for
 line or scripts (Will be implemented in a plugin) (Think about support for python3)
 Make PDBs work
 XP Support
+Option to use GonDBG as a viewer (Probably hook WaitFor/ContinueDebugEvent and imitiate only necessary events, then just allow
+read/write memory operations and such)
+Flags for commands to indicate what modes they support (Viewer, TTD etc). Default 0. Also add an override for that to allow users to call commands
+which don't support (On paper) if they're sure of it. An alternative to that is that they use your API to get debugee data, just fail these functions with an exception you know
 
 Roadmap for version 1.0:
 Python
